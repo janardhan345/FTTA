@@ -37,7 +37,7 @@ async function main() {
       where:  { email: adminEmail },
       update: {}, // don't overwrite anything if it already exists
       create: {
-        id:    'seed-placeholder',   // replaced on first real Google login
+        id:    `seed-${Date.now()}`,   // unique placeholder per seed run
         email: adminEmail,
         name:  'Administrator',
       },
