@@ -2,6 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env.js';
+import './config/passport.js'; // registers the Google OAuth strategy with Passport
+import passport from 'passport';
+import { verifyJWT, requireAdmin } from './middleware/auth.js';
+import authRouter    from './routes/auth.routes.js';
+import facultyRouter from './routes/faculty.routes.js';
+import studentRouter from './routes/student.routes.js';
+import qrRouter      from './routes/qr.routes.js';
+import sessionRouter from './routes/session.routes.js';
+import adminRouter   from './routes/admin.routes.js';
 
 const app = express();
 
@@ -24,20 +33,36 @@ app.use(cors({
 // Without this, req.body is always undefined when your frontend sends JSON.
 app.use(express.json());
 
+// passport.initialize() must be called after express.json() and before routes.
+// It prepares Passport to handle authentication on incoming requests.
+// Even though we don't use sessions, Passport still needs this.
+app.use(passport.initialize());
+
 // Health check route — the first thing you should hit to confirm the server is running.
 // Returns a timestamp so you can also tell if the server is stale/hung.
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ─── Routes will be mounted here in later phases ────────────────────────────
-// app.use('/api/v1/auth',     authRouter);
-// app.use('/api/v1/faculty',  facultyRouter);
-// app.use('/api/v1/students', studentRouter);
-// app.use('/api/v1/qr',       qrRouter);
-// app.use('/api/v1/sessions', sessionRouter);
-// app.use('/api/v1/admin',    adminRouter);
-// ────────────────────────────────────────────────────────────────────────────
+// ─── Routes ──────────────────────────────────────────────────────────────────
+// Auth: no JWT required (it's the login flow itself)
+app.use('/api/v1/auth', authRouter);
+
+// Faculty: admin only (verifyJWT + requireAdmin applied for all routes)
+app.use('/api/v1/faculty', verifyJWT, requireAdmin, facultyRouter);
+
+// Students: any logged-in user can read; admin-only actions enforced inside the router
+app.use('/api/v1/students', verifyJWT, studentRouter);
+
+// QR: any logged-in user can get current QR; scan is faculty-only (enforced in router)
+app.use('/api/v1/qr', verifyJWT, qrRouter);
+
+// Sessions: reading own sessions = faculty only; all sessions = admin only (enforced in router)
+app.use('/api/v1/sessions', verifyJWT, sessionRouter);
+
+// Admin: all admin-only routes
+app.use('/api/v1/admin', verifyJWT, requireAdmin, adminRouter);
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Global error handler — MUST be last and MUST have 4 parameters (err, req, res, next).
 // Express identifies error-handling middleware by the 4-argument signature.

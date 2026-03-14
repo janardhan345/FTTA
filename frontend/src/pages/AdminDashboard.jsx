@@ -1,0 +1,172 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useAvailability } from '../hooks/useAvailability';
+import api from '../api/axios';
+
+// AdminDashboard: the main page for the admin.
+// Shows:
+//   1. Stats summary (total faculty, students, sessions)
+//   2. Real-time faculty availability table (who is busy vs available)
+//   3. Quick assign: reassign a student from one faculty to another
+//
+// Route: /admin (admin only)
+export default function AdminDashboard() {
+  const { user, logout }           = useAuth();
+  const { availability, loading }  = useAvailability(5000);
+  const [stats,    setStats]       = useState(null);
+  const [assignForm, setAssignForm] = useState({ studentId: '', newFacultyId: '' });
+  const [assignMsg,  setAssignMsg]  = useState(null);
+
+  useEffect(() => {
+    api.get('/admin/stats').then(({ data }) => setStats(data));
+  }, []);
+
+  async function handleAssign(e) {
+    e.preventDefault();
+    setAssignMsg(null);
+    try {
+      const { data } = await api.patch('/admin/assign', assignForm);
+      setAssignMsg({ type: 'ok', text: `Student reassigned to ${data.faculty?.name || 'new faculty'}` });
+      setAssignForm({ studentId: '', newFacultyId: '' });
+    } catch (err) {
+      setAssignMsg({ type: 'err', text: err.response?.data?.error || 'Assignment failed' });
+    }
+  }
+
+  const busy      = availability.filter(f => f.status === 'busy');
+  const available = availability.filter(f => f.status === 'available');
+
+  return (
+    <div style={styles.page}>
+      {/* ── Header ── */}
+      <header style={styles.header}>
+        <h1 style={styles.heading}>Admin Dashboard</h1>
+        <div style={styles.headerActions}>
+          <Link to="/kiosk" target="_blank" style={styles.kioskLink}>Open Kiosk QR ↗</Link>
+          <button onClick={logout} style={styles.logoutBtn}>Logout</button>
+        </div>
+      </header>
+
+      {/* ── Stats Row ── */}
+      {stats && (
+        <div style={styles.statsRow}>
+          {[
+            { n: stats.totalFaculty,              l: 'Faculty' },
+            { n: stats.totalStudents,             l: 'Students' },
+            { n: stats.totalSessions,             l: 'Total Sessions' },
+            { n: stats.activeSessions,            l: 'Active Now', highlight: stats.activeSessions > 0 },
+            { n: stats.avgSessionDurationMinutes, l: 'Avg Duration (min)' },
+          ].map(({ n, l, highlight }) => (
+            <div key={l} style={{ ...styles.statCard, borderTop: highlight ? '3px solid #e55' : '3px solid #1a1a2e' }}>
+              <span style={styles.statNumber}>{n}</span>
+              <span style={styles.statLabel}>{l}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Availability Table ── */}
+      <section style={styles.section}>
+        <h2 style={styles.sectionTitle}>
+          Faculty Availability
+          <span style={styles.badge}>{busy.length} in session</span>
+        </h2>
+
+        {loading && <p style={styles.muted}>Loading...</p>}
+
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              {['Name', 'Dept', 'Students', 'Status', 'Session Started'].map(h => (
+                <th key={h} style={styles.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {availability.map(f => (
+              <tr key={f.id} style={{ background: f.status === 'busy' ? '#fff8e1' : '#fff' }}>
+                <td style={styles.td}>{f.name}</td>
+                <td style={styles.td}>{f.dept}</td>
+                <td style={styles.td}>{f.studentCount}</td>
+                <td style={styles.td}>
+                  <span style={{
+                    ...styles.statusPill,
+                    background: f.status === 'busy' ? '#ffecb3' : '#e8f5e9',
+                    color:      f.status === 'busy' ? '#b26a00' : '#2e7d32',
+                  }}>
+                    {f.status === 'busy' ? '● Busy' : '✓ Available'}
+                  </span>
+                </td>
+                <td style={styles.td}>
+                  {f.sessionStartAt
+                    ? new Date(f.sessionStartAt).toLocaleTimeString()
+                    : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      {/* ── Quick Assign ── */}
+      <section style={styles.section}>
+        <h2 style={styles.sectionTitle}>Reassign Student</h2>
+        <form onSubmit={handleAssign} style={styles.form}>
+          <input
+            style={styles.input}
+            placeholder="Student ID"
+            value={assignForm.studentId}
+            onChange={e => setAssignForm(p => ({ ...p, studentId: e.target.value }))}
+            required
+          />
+          <input
+            style={styles.input}
+            placeholder="New Faculty ID"
+            value={assignForm.newFacultyId}
+            onChange={e => setAssignForm(p => ({ ...p, newFacultyId: e.target.value }))}
+            required
+          />
+          <button type="submit" style={styles.submitBtn}>Reassign</button>
+        </form>
+        {assignMsg && (
+          <p style={{ color: assignMsg.type === 'ok' ? 'green' : 'red', marginTop: '0.5rem' }}>
+            {assignMsg.text}
+          </p>
+        )}
+      </section>
+
+      {/* ── Nav Links ── */}
+      <div style={styles.navLinks}>
+        <Link to="/admin/faculty"  style={styles.navLink}>Manage Faculty →</Link>
+        <Link to="/admin/students" style={styles.navLink}>Manage Students →</Link>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  page:         { maxWidth: 900, margin: '0 auto', padding: '1rem', fontFamily: 'sans-serif' },
+  header:       { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
+  heading:      { margin: 0, fontSize: '1.5rem', color: '#1a1a2e' },
+  headerActions:{ display: 'flex', gap: '1rem', alignItems: 'center' },
+  kioskLink:    { color: '#1a1a2e', fontWeight: 600, textDecoration: 'none', border: '2px solid #1a1a2e', padding: '0.4rem 0.8rem', borderRadius: 6, fontSize: '0.9rem' },
+  logoutBtn:    { background: '#eee', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' },
+  statsRow:     { display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
+  statCard:     { flex: 1, minWidth: 100, background: '#fff', borderRadius: 10, padding: '1rem', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
+  statNumber:   { display: 'block', fontSize: '1.8rem', fontWeight: 700, color: '#1a1a2e' },
+  statLabel:    { fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: 1 },
+  section:      { background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', marginBottom: '1rem' },
+  sectionTitle: { margin: '0 0 1rem', fontSize: '1.1rem', color: '#333', display: 'flex', alignItems: 'center', gap: 10 },
+  badge:        { background: '#fce', color: '#900', borderRadius: 20, padding: '2px 10px', fontSize: '0.8rem' },
+  muted:        { color: '#999' },
+  table:        { width: '100%', borderCollapse: 'collapse' },
+  th:           { textAlign: 'left', padding: '0.5rem 0.75rem', borderBottom: '2px solid #eee', fontSize: '0.85rem', color: '#666', fontWeight: 600 },
+  td:           { padding: '0.6rem 0.75rem', borderBottom: '1px solid #f5f5f5', fontSize: '0.9rem', color: '#333' },
+  statusPill:   { padding: '3px 10px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 600 },
+  form:         { display: 'flex', gap: '0.75rem', flexWrap: 'wrap' },
+  input:        { flex: 1, minWidth: 200, padding: '0.6rem 0.75rem', border: '1px solid #ddd', borderRadius: 6, fontSize: '0.9rem' },
+  submitBtn:    { background: '#1a1a2e', color: '#fff', border: 'none', padding: '0.6rem 1.25rem', borderRadius: 6, cursor: 'pointer', fontFamily: 'sans-serif', fontWeight: 600 },
+  navLinks:     { display: 'flex', gap: '1rem', marginTop: '0.5rem' },
+  navLink:      { color: '#1a1a2e', fontWeight: 600, textDecoration: 'none', fontSize: '0.95rem' },
+};
