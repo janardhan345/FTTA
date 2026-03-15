@@ -1,0 +1,20 @@
+# Never copy these into the Docker image
+
+# Dependencies — reinstalled fresh inside the image by npm ci
+node_modules/
+
+# Secrets — injected as environment variables by Railway at runtime
+.env
+.env.*
+
+# Development-only files
+*.log
+.git/
+.gitignore
+
+# Prisma generated client — regenerated during build by postinstall
+node_modules/.prisma/
+
+# OS junk
+.DS_Store
+Thumbs.db
