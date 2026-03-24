@@ -25,8 +25,9 @@ export async function getStudents(req, res, next) {
   }
 }
 
-// POST /api/v1/students  (admin only — enforced in the route)
-// Create a student and assign them to a faculty.
+// POST /api/v1/students
+// Faculty: can only create students assigned to themselves
+// Admin: can create students for any faculty
 export async function createStudent(req, res, next) {
   try {
     const { name, gender, facultyId, dept, cutOff, community, quota, status } = req.body;
@@ -36,6 +37,11 @@ export async function createStudent(req, res, next) {
       .filter(field => req.body[field] === undefined || req.body[field] === '');
     if (missing.length > 0) {
       return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}` });
+    }
+
+    // Authorization: faculty can only create for themselves
+    if (req.user.role === 'faculty' && facultyId !== req.user.id) {
+      return res.status(403).json({ error: 'Faculty can only create students for themselves' });
     }
 
     // Make sure the target faculty actually exists before creating the student
@@ -137,9 +143,22 @@ export async function updateStudent(req, res, next) {
   }
 }
 
-// DELETE /api/v1/students/:id  (admin only — enforced in the route)
+// DELETE /api/v1/students/:id
+// Faculty: can only delete students assigned to them
+// Admin: can delete any student
 export async function deleteStudent(req, res, next) {
   try {
+    const student = await prisma.student.findUnique({ where: { id: req.params.id } });
+
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    // Authorization: faculty can only delete their own students
+    if (req.user.role === 'faculty' && student.facultyId !== req.user.id) {
+      return res.status(403).json({ error: 'You can only delete your own students' });
+    }
+
     await prisma.student.delete({ where: { id: req.params.id } });
     res.status(204).send();
   } catch (err) {
