@@ -9,9 +9,6 @@ import {
 
 const router = Router();
 
-// All routes here are already protected by [verifyJWT, requireAdmin]
-// applied at mount-level in app.js — no need to repeat middleware per route.
-
 router.get('/',     getAllFaculty);    // GET  /api/v1/faculty
 router.post('/',    createFaculty);   // POST /api/v1/faculty
 router.get('/:id',  getFacultyById);  // GET  /api/v1/faculty/:id

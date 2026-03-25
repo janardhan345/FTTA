@@ -4,13 +4,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // Prisma reads DATABASE_URL from your .env file automatically via env()
   url      = env("DATABASE_URL")
 }
 
-// Admin is a completely separate entity from Faculty.
-// id is the Google OAuth "sub" claim (a stable unique string Google assigns
-// to every Google account — it never changes even if the user renames themselves).
 model Admin {
   id        String   @id @unique
   email     String   @unique
@@ -20,25 +16,19 @@ model Admin {
   @@map("admins")
 }
 
-// Faculty members. Their id is also the Google OAuth sub claim,
-// assigned automatically when they log in for the first time.
 model Faculty {
   id        String    @id @unique
   email     String    @unique
   name      String
-  dept      String    // e.g. "CSE", "ECE" — matches Department.code
+  dept      String    
   createdAt DateTime  @default(now()) @map("created_at")
 
-  // One Faculty can have many Students
   students  Student[]
-  // One Faculty can have many Sessions
   sessions  Session[]
 
   @@map("faculty")
 }
 
-// Students assigned to a specific faculty for counselling.
-// id is auto-generated UUID — no manual ID needed.
 model Student {
   id        String   @id @default(uuid())
   name      String
@@ -47,27 +37,21 @@ model Student {
   cutOff    Float    @map("cut_off")
   community String
   quota     String
-  status    String   // e.g. "active", "counselled", "pending"
+  status    String   // ex: active, counselled, pending
   createdAt DateTime @default(now()) @map("created_at")
 
-  // Foreign key: which faculty this student belongs to
-  facultyId String   @map("faculty_id")
-  // @relation wires up the foreign key.
-  // onDelete: Cascade means deleting a Faculty also deletes all their Students.
-  faculty   Faculty  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+
+facultyId String   @map("faculty_id")
+
+faculty   Faculty  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
 
   @@map("students")
 }
 
-// A counselling session. Created when a faculty scans entry QR.
-// endTime is nullable (DateTime?) — null means the session is currently active.
-// When the faculty scans exit QR, endTime gets set to the current timestamp.
 model Session {
   id          Int       @id @default(autoincrement())
   startTime   DateTime  @map("start_time")
-  endTime     DateTime? @map("end_time")    // null = faculty is currently in session
-  // We store the QR token that was scanned to start this session.
-  // This creates an audit trail: you can always trace which scan created which session.
+  endTime     DateTime? @map("end_time")   
   qrToken     String    @unique @map("qr_token")
   qrExpiresAt DateTime  @map("qr_expires_at")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -78,22 +62,19 @@ model Session {
   @@map("sessions")
 }
 
-// The single QR code currently displayed on the kiosk screen.
-// There will ALWAYS be exactly one row in this table (id = 1).
-// Every scan replaces the token here atomically via upsert.
 model ActiveQR {
   id        Int      @id @default(autoincrement())
-  token     String   @unique               // the random hex string encoded in the QR image
-  expiresAt DateTime @map("expires_at")    // when this token becomes invalid
-  updatedAt DateTime @updatedAt @map("updated_at") // auto-set by Prisma on every update
+  token     String   @unique               
+  expiresAt DateTime @map("expires_at")    
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("active_qr")
 }
 
-// Reference table for department codes. Seeded once, not modified.
+
 model Department {
-  code String @id @unique  // e.g. "CSE"
-  name String              // e.g. "Computer Science and Engineering"
+  code String @id @unique 
+  name String             
 
   @@map("departments")
 }

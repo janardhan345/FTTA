@@ -1,10 +1,5 @@
 import prisma from '../lib/prisma.js';
 
-// GET /api/v1/faculty
-// Returns all faculty. For each faculty we also compute:
-//   - how many students they have (_count)
-//   - whether they currently have an active session (sessions.length > 0)
-// This is done in a single Prisma query using "include" — no extra DB round-trips.
 export async function getAllFaculty(req, res, next) {
   try {
     const faculty = await prisma.faculty.findMany({
