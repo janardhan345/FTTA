@@ -1,0 +1,156 @@
+/* Shared responsive overrides for mobile-first behavior across screens */
+
+:root {
+  --mobile-breakpoint: 768px;
+}
+
+@media (max-width: 768px) {
+  .mobile-login-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 1rem !important;
+    align-items: stretch !important;
+  }
+
+  .mobile-login-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: auto 0;
+    padding: 1.5rem 1rem !important;
+  }
+
+  .mobile-login-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .faculty-dashboard-page,
+  .admin-dashboard-page,
+  .admin-faculty-page,
+  .admin-students-page {
+    padding: 0.875rem !important;
+  }
+
+  .faculty-dashboard-header,
+  .admin-dashboard-header,
+  .admin-faculty-header,
+  .admin-students-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.75rem;
+  }
+
+  .faculty-dashboard-logout,
+  .admin-faculty-add-btn,
+  .admin-students-add-btn {
+    width: 100%;
+  }
+
+  .admin-dashboard-header-actions {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    width: 100%;
+  }
+
+  .admin-dashboard-header-actions a,
+  .admin-dashboard-header-actions button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .faculty-dashboard-stats,
+  .admin-dashboard-stats {
+    gap: 0.65rem !important;
+  }
+
+  .faculty-dashboard-stat-card,
+  .admin-dashboard-stat-card {
+    min-width: calc(50% - 0.4rem) !important;
+    flex: 1 1 calc(50% - 0.4rem) !important;
+  }
+
+  .faculty-dashboard-student-card,
+  .admin-faculty-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem;
+  }
+
+  .faculty-dashboard-student-right,
+  .admin-faculty-card-right {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .faculty-dashboard-fab {
+    left: 0.875rem !important;
+    right: 0.875rem !important;
+    bottom: calc(0.875rem + env(safe-area-inset-bottom)) !important;
+    border-radius: 14px !important;
+    width: auto;
+    text-align: center;
+  }
+
+  .admin-dashboard-table-wrap,
+  .admin-students-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-dashboard-form,
+  .admin-faculty-form-row {
+    flex-direction: column !important;
+    align-items: stretch;
+  }
+
+  .admin-dashboard-input,
+  .admin-faculty-input,
+  .admin-students-input {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .admin-dashboard-submit,
+  .admin-faculty-submit,
+  .admin-students-submit,
+  .admin-faculty-delete-btn {
+    width: 100%;
+  }
+
+  .admin-dashboard-nav {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .scan-page {
+    padding: 0.875rem !important;
+  }
+
+  .scan-card,
+  .scan-result-card {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 1.1rem !important;
+  }
+
+  .kiosk-page {
+    padding: 1rem !important;
+  }
+
+  .kiosk-qr-container {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100%;
+    max-width: 340px;
+    padding: 1rem !important;
+  }
+
+  .kiosk-qr-image {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 320px;
+  }
+}

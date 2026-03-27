@@ -39,13 +39,13 @@ export default function KioskQR() {
   }, []);
 
   return (
-    <div style={styles.page}>
+    <div className="kiosk-page" style={styles.page}>
       <h1 style={styles.title}>Counselling Session Check-In</h1>
       <p style={styles.subtitle}>
         Faculty: scan this QR with the FTTA app on your phone
       </p>
 
-      <div style={styles.qrContainer}>
+      <div className="kiosk-qr-container" style={styles.qrContainer}>
         {loading && <p style={styles.status}>Loading QR...</p>}
         {error   && <p style={styles.error}>{error}</p>}
         {qrData  && (
@@ -54,6 +54,7 @@ export default function KioskQR() {
           <img
             src={qrData.imageBase64}
             alt="Scan this QR code"
+            className="kiosk-qr-image"
             style={styles.qrImage}
           />
         )}

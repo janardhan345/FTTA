@@ -13,13 +13,15 @@ export default function QRScanner({ onScanSuccess, onScanError }) {
   const scannerRef = useRef(null);
 
   useEffect(() => {
+    const qrBoxSize = Math.max(180, Math.min(280, window.innerWidth - 96));
+
     // The second argument configures the scanner:
     //   fps: 10 = try to decode 10 times per second
     //   qrbox: the green scan area shown in the viewfinder
     // The third argument (false) = don't show verbose logs
     const scanner = new Html5QrcodeScanner(
       'qr-reader',
-      { fps: 10, qrbox: { width: 280, height: 280 } },
+      { fps: 10, qrbox: { width: qrBoxSize, height: qrBoxSize } },
       false
     );
     scannerRef.current = scanner;

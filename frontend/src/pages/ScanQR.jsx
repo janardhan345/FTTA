@@ -43,8 +43,8 @@ export default function ScanQR() {
     const minutes    = durationMs ? Math.round(durationMs / 60_000) : null;
 
     return (
-      <div style={styles.page}>
-        <div style={styles.resultCard}>
+      <div className="scan-page" style={styles.page}>
+        <div className="scan-result-card" style={styles.resultCard}>
           <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
             {isStart ? '✅' : '🏁'}
           </div>
@@ -65,8 +65,8 @@ export default function ScanQR() {
   }
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
+    <div className="scan-page" style={styles.page}>
+      <div className="scan-card" style={styles.card}>
         <button onClick={() => navigate('/dashboard')} style={styles.backLink}>
           ← Back
         </button>

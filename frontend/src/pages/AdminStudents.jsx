@@ -62,13 +62,13 @@ export default function AdminStudents() {
   }
 
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
+    <div className="admin-students-page" style={styles.page}>
+      <header className="admin-students-header" style={styles.header}>
         <div>
           <Link to="/admin" style={styles.back}>← Admin Dashboard</Link>
           <h1 style={styles.heading}>Manage Students</h1>
         </div>
-        <button onClick={() => setShowForm(f => !f)} style={styles.addBtn}>
+        <button className="admin-students-add-btn" onClick={() => setShowForm(f => !f)} style={styles.addBtn}>
           {showForm ? 'Cancel' : '+ Add Student'}
         </button>
       </header>
@@ -77,44 +77,44 @@ export default function AdminStudents() {
       {success && <div style={styles.success}>{success}</div>}
 
       {showForm && (
-        <form onSubmit={handleAdd} style={styles.form}>
+        <form className="admin-students-form" onSubmit={handleAdd} style={styles.form}>
           <h3 style={{ margin: '0 0 1rem' }}>Add New Student</h3>
-          <div style={styles.grid}>
-            <input style={styles.input} placeholder="Full Name" required
+          <div className="admin-students-grid" style={styles.grid}>
+            <input className="admin-students-input" style={styles.input} placeholder="Full Name" required
               value={form.name} onChange={e => update('name', e.target.value)} />
-            <select style={styles.input} required
+            <select className="admin-students-input" style={styles.input} required
               value={form.gender} onChange={e => update('gender', e.target.value)}>
               <option value="">Gender</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
-            <select style={styles.input} required
+            <select className="admin-students-input" style={styles.input} required
               value={form.facultyId} onChange={e => update('facultyId', e.target.value)}>
               <option value="">Assign to Faculty</option>
               {faculty.map(f => <option key={f.id} value={f.id}>{f.name} ({f.dept})</option>)}
             </select>
-            <input style={styles.input} placeholder="Dept (e.g. CSE)" required
+            <input className="admin-students-input" style={styles.input} placeholder="Dept (e.g. CSE)" required
               value={form.dept} onChange={e => update('dept', e.target.value)} />
-            <input style={styles.input} placeholder="Cut-off (%)" required type="number" step="0.01"
+            <input className="admin-students-input" style={styles.input} placeholder="Cut-off (%)" required type="number" step="0.01"
               value={form.cutOff} onChange={e => update('cutOff', e.target.value)} />
-            <input style={styles.input} placeholder="Community (e.g. OC, BC)" required
+            <input className="admin-students-input" style={styles.input} placeholder="Community (e.g. OC, BC)" required
               value={form.community} onChange={e => update('community', e.target.value)} />
-            <input style={styles.input} placeholder="Quota (e.g. Government, Management)" required
+            <input className="admin-students-input" style={styles.input} placeholder="Quota (e.g. Government, Management)" required
               value={form.quota} onChange={e => update('quota', e.target.value)} />
-            <select style={styles.input} value={form.status} onChange={e => update('status', e.target.value)}>
+            <select className="admin-students-input" style={styles.input} value={form.status} onChange={e => update('status', e.target.value)}>
               <option value="pending">Pending</option>
               <option value="admitted">Admitted</option>
               <option value="counselled">Counselled</option>
             </select>
           </div>
-          <button type="submit" style={{ ...styles.addBtn, marginTop: '0.75rem' }}>Add Student</button>
+          <button className="admin-students-submit" type="submit" style={{ ...styles.addBtn, marginTop: '0.75rem' }}>Add Student</button>
         </form>
       )}
 
       {loading && <p style={styles.muted}>Loading students...</p>}
 
-      <div style={styles.tableWrapper}>
+      <div className="admin-students-table-wrap" style={styles.tableWrapper}>
         <table style={styles.table}>
           <thead>
             <tr>

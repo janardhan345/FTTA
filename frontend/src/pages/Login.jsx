@@ -25,8 +25,8 @@ export default function Login() {
   if (loading) return null; // wait silently
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
+    <div className="mobile-login-page" style={styles.page}>
+      <div className="mobile-login-card" style={styles.card}>
         <h1 style={styles.title}>FTTA</h1>
         <p style={styles.subtitle}>Faculty Time Tracking & Availability</p>
 
@@ -40,7 +40,7 @@ export default function Login() {
 
         {/* Redirect directly to the backend OAuth start URL.
             The backend (Passport) will take it from there. */}
-        <a href={`${API_URL}/auth/google`} style={styles.button}>
+        <a className="mobile-login-button" href={`${API_URL}/auth/google`} style={styles.button}>
           <span style={styles.googleIcon}>G</span>
           Sign in with Google
         </a>

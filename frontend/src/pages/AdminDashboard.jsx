@@ -38,11 +38,11 @@ export default function AdminDashboard() {
   const available = availability.filter(f => f.status === 'available');
 
   return (
-    <div style={styles.page}>
+    <div className="admin-dashboard-page" style={styles.page}>
       {/* ── Header ── */}
-      <header style={styles.header}>
+      <header className="admin-dashboard-header" style={styles.header}>
         <h1 style={styles.heading}>Admin Dashboard</h1>
-        <div style={styles.headerActions}>
+        <div className="admin-dashboard-header-actions" style={styles.headerActions}>
           <Link to="/kiosk" target="_blank" style={styles.kioskLink}>Open Kiosk QR ↗</Link>
           <button onClick={logout} style={styles.logoutBtn}>Logout</button>
         </div>
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
 
       {/* ── Stats Row ── */}
       {stats && (
-        <div style={styles.statsRow}>
+        <div className="admin-dashboard-stats" style={styles.statsRow}>
           {[
             { n: stats.totalFaculty,              l: 'Faculty' },
             { n: stats.totalStudents,             l: 'Students' },
@@ -58,7 +58,7 @@ export default function AdminDashboard() {
             { n: stats.activeSessions,            l: 'Active Now', highlight: stats.activeSessions > 0 },
             { n: stats.avgSessionDurationMinutes, l: 'Avg Duration (min)' },
           ].map(({ n, l, highlight }) => (
-            <div key={l} style={{ ...styles.statCard, borderTop: highlight ? '3px solid #e55' : '3px solid #1a1a2e' }}>
+            <div className="admin-dashboard-stat-card" key={l} style={{ ...styles.statCard, borderTop: highlight ? '3px solid #e55' : '3px solid #1a1a2e' }}>
               <span style={styles.statNumber}>{n}</span>
               <span style={styles.statLabel}>{l}</span>
             </div>
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
       )}
 
       {/* ── Availability Table ── */}
-      <section style={styles.section}>
+      <section className="admin-dashboard-section" style={styles.section}>
         <h2 style={styles.sectionTitle}>
           Faculty Availability
           <span style={styles.badge}>{busy.length} in session</span>
@@ -75,45 +75,48 @@ export default function AdminDashboard() {
 
         {loading && <p style={styles.muted}>Loading...</p>}
 
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              {['Name', 'Dept', 'Students', 'Status', 'Session Started'].map(h => (
-                <th key={h} style={styles.th}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {availability.map(f => (
-              <tr key={f.id} style={{ background: f.status === 'busy' ? '#fff8e1' : '#fff' }}>
-                <td style={styles.td}>{f.name}</td>
-                <td style={styles.td}>{f.dept}</td>
-                <td style={styles.td}>{f.studentCount}</td>
-                <td style={styles.td}>
-                  <span style={{
-                    ...styles.statusPill,
-                    background: f.status === 'busy' ? '#ffecb3' : '#e8f5e9',
-                    color:      f.status === 'busy' ? '#b26a00' : '#2e7d32',
-                  }}>
-                    {f.status === 'busy' ? '● Busy' : '✓ Available'}
-                  </span>
-                </td>
-                <td style={styles.td}>
-                  {f.sessionStartAt
-                    ? new Date(f.sessionStartAt).toLocaleTimeString()
-                    : '—'}
-                </td>
+        <div className="admin-dashboard-table-wrap">
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                {['Name', 'Dept', 'Students', 'Status', 'Session Started'].map(h => (
+                  <th key={h} style={styles.th}>{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {availability.map(f => (
+                <tr key={f.id} style={{ background: f.status === 'busy' ? '#fff8e1' : '#fff' }}>
+                  <td style={styles.td}>{f.name}</td>
+                  <td style={styles.td}>{f.dept}</td>
+                  <td style={styles.td}>{f.studentCount}</td>
+                  <td style={styles.td}>
+                    <span style={{
+                      ...styles.statusPill,
+                      background: f.status === 'busy' ? '#ffecb3' : '#e8f5e9',
+                      color:      f.status === 'busy' ? '#b26a00' : '#2e7d32',
+                    }}>
+                      {f.status === 'busy' ? '● Busy' : '✓ Available'}
+                    </span>
+                  </td>
+                  <td style={styles.td}>
+                    {f.sessionStartAt
+                      ? new Date(f.sessionStartAt).toLocaleTimeString()
+                      : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {/* ── Quick Assign ── */}
-      <section style={styles.section}>
+      <section className="admin-dashboard-section" style={styles.section}>
         <h2 style={styles.sectionTitle}>Reassign Student</h2>
-        <form onSubmit={handleAssign} style={styles.form}>
+        <form className="admin-dashboard-form" onSubmit={handleAssign} style={styles.form}>
           <input
+            className="admin-dashboard-input"
             style={styles.input}
             placeholder="Student ID"
             value={assignForm.studentId}
@@ -121,13 +124,14 @@ export default function AdminDashboard() {
             required
           />
           <input
+            className="admin-dashboard-input"
             style={styles.input}
             placeholder="New Faculty ID"
             value={assignForm.newFacultyId}
             onChange={e => setAssignForm(p => ({ ...p, newFacultyId: e.target.value }))}
             required
           />
-          <button type="submit" style={styles.submitBtn}>Reassign</button>
+          <button className="admin-dashboard-submit" type="submit" style={styles.submitBtn}>Reassign</button>
         </form>
         {assignMsg && (
           <p style={{ color: assignMsg.type === 'ok' ? 'green' : 'red', marginTop: '0.5rem' }}>
@@ -137,7 +141,7 @@ export default function AdminDashboard() {
       </section>
 
       {/* ── Nav Links ── */}
-      <div style={styles.navLinks}>
+      <div className="admin-dashboard-nav" style={styles.navLinks}>
         <Link to="/admin/faculty"  style={styles.navLink}>Manage Faculty →</Link>
         <Link to="/admin/students" style={styles.navLink}>Manage Students →</Link>
       </div>

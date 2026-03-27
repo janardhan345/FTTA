@@ -49,13 +49,13 @@ export default function AdminFaculty() {
   }
 
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
+    <div className="admin-faculty-page" style={styles.page}>
+      <header className="admin-faculty-header" style={styles.header}>
         <div>
           <Link to="/admin" style={styles.back}>← Admin Dashboard</Link>
           <h1 style={styles.heading}>Manage Faculty</h1>
         </div>
-        <button onClick={() => setShowForm(f => !f)} style={styles.addBtn}>
+        <button className="admin-faculty-add-btn" onClick={() => setShowForm(f => !f)} style={styles.addBtn}>
           {showForm ? 'Cancel' : '+ Add Faculty'}
         </button>
       </header>
@@ -64,33 +64,34 @@ export default function AdminFaculty() {
       {success && <div style={styles.success}>{success}</div>}
 
       {showForm && (
-        <form onSubmit={handleAdd} style={styles.form}>
+        <form className="admin-faculty-form" onSubmit={handleAdd} style={styles.form}>
           <h3 style={{ margin: '0 0 1rem' }}>Add New Faculty</h3>
-          <div style={styles.formRow}>
-            <input style={styles.input} placeholder="Full Name" required
+          <div className="admin-faculty-form-row" style={styles.formRow}>
+            <input className="admin-faculty-input" style={styles.input} placeholder="Full Name" required
               value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
-            <input style={styles.input} placeholder="College Email" required type="email"
+            <input className="admin-faculty-input" style={styles.input} placeholder="College Email" required type="email"
               value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} />
-            <input style={styles.input} placeholder="Dept (e.g. CSE)" required
+            <input className="admin-faculty-input" style={styles.input} placeholder="Dept (e.g. CSE)" required
               value={form.dept} onChange={e => setForm(p => ({ ...p, dept: e.target.value }))} />
-            <button type="submit" style={styles.submitBtn}>Add</button>
+            <button className="admin-faculty-submit" type="submit" style={styles.submitBtn}>Add</button>
           </div>
         </form>
       )}
 
       {loading && <p style={styles.muted}>Loading faculty...</p>}
 
-      <div style={styles.list}>
+      <div className="admin-faculty-list" style={styles.list}>
         {faculty.map(f => (
-          <div key={f.id} style={styles.card}>
+          <div className="admin-faculty-card" key={f.id} style={styles.card}>
             <div style={styles.cardLeft}>
               <strong style={styles.name}>{f.name}</strong>
               <span style={styles.email}>{f.email}</span>
               <span style={styles.meta}>{f.dept} · {f.studentCount} students · {f.sessionCount} sessions</span>
             </div>
-            <div style={styles.cardRight}>
+            <div className="admin-faculty-card-right" style={styles.cardRight}>
               {f.isInSession && <span style={styles.busyBadge}>In Session</span>}
               <button
+                className="admin-faculty-delete-btn"
                 onClick={() => handleDelete(f.id, f.name)}
                 style={styles.deleteBtn}
               >

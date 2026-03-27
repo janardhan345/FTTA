@@ -32,30 +32,30 @@ export default function FacultyDashboard() {
   }, []);
 
   return (
-    <div style={styles.page}>
+    <div className="faculty-dashboard-page" style={styles.page}>
       {/* ── Header ── */}
-      <header style={styles.header}>
+      <header className="faculty-dashboard-header" style={styles.header}>
         <div>
           <h1 style={styles.heading}>Welcome, {user?.name?.split(' ')[0]}</h1>
           <p style={styles.subheading}>{user?.dept} Department</p>
         </div>
-        <button onClick={logout} style={styles.logoutBtn}>Logout</button>
+        <button className="faculty-dashboard-logout" onClick={logout} style={styles.logoutBtn}>Logout</button>
       </header>
 
       {/* ── Stats Bar ── */}
-      <div style={styles.statsRow}>
-        <div style={styles.statCard}>
+      <div className="faculty-dashboard-stats" style={styles.statsRow}>
+        <div className="faculty-dashboard-stat-card" style={styles.statCard}>
           <span style={styles.statNumber}>{students.length}</span>
           <span style={styles.statLabel}>Students</span>
         </div>
-        <div style={styles.statCard}>
+        <div className="faculty-dashboard-stat-card" style={styles.statCard}>
           <span style={styles.statNumber}>{sessions.total}</span>
           <span style={styles.statLabel}>Sessions Done</span>
         </div>
       </div>
 
       {/* ── Student List ── */}
-      <section style={styles.section}>
+      <section className="faculty-dashboard-section" style={styles.section}>
         <h2 style={styles.sectionTitle}>My Students</h2>
 
         {loading && <p style={styles.muted}>Loading students...</p>}
@@ -65,14 +65,14 @@ export default function FacultyDashboard() {
         )}
 
         {students.map(student => (
-          <div key={student.id} style={styles.studentCard}>
-            <div style={styles.studentLeft}>
+          <div className="faculty-dashboard-student-card" key={student.id} style={styles.studentCard}>
+            <div className="faculty-dashboard-student-left" style={styles.studentLeft}>
               <strong style={styles.studentName}>{student.name}</strong>
               <span style={styles.studentMeta}>
                 {student.dept} · {student.community} · {student.quota}
               </span>
             </div>
-            <div>
+            <div className="faculty-dashboard-student-right">
               <span style={{
                 ...styles.statusBadge,
                 background: student.status === 'counselled' ? '#d4edda' : '#fff3cd',
@@ -89,6 +89,7 @@ export default function FacultyDashboard() {
       {/* ── Floating QR Scan Button ── */}
       <button
         onClick={() => navigate('/scan')}
+        className="faculty-dashboard-fab"
         style={styles.fab}
         title="Scan QR to start/end session"
       >
