@@ -6,14 +6,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
-
-# Copy schema for Prisma generation
+# Copy Prisma schema BEFORE npm install (needed for postinstall script)
 COPY prisma ./prisma
 
-# Generate Prisma client
-RUN npx prisma generate
+# Install dependencies (will run postinstall: prisma generate)
+RUN npm install
 
 # Production stage
 FROM node:20-alpine
@@ -23,15 +20,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Copy Prisma schema BEFORE npm install (needed for postinstall script)
+# Copy Prisma schema (needed for migrations)
 COPY prisma ./prisma
 
-# Copy Prisma generated client from builder
+# Copy generated Prisma client from builder
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Install production dependencies only
-# This will run postinstall script (prisma generate) but schema is already present
-RUN npm ci --only=production
+# Install production dependencies only (skip scripts since we already have .prisma)
+RUN npm ci --omit=dev --ignore-scripts
 
 # Copy application code
 COPY src ./src
