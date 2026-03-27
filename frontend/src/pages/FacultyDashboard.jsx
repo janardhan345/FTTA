@@ -17,6 +17,18 @@ export default function FacultyDashboard() {
   const [students, setStudents] = useState([]);
   const [sessions, setSessions] = useState({ total: 0 });
   const [loading,  setLoading]  = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    name: '', gender: '', dept: '', cutOff: '', community: '', quota: '', status: 'pending',
+  });
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  function loadStudents() {
+    api.get('/students')
+      .then(res => setStudents(res.data))
+      .catch(err => setError(err.response?.data?.error || 'Failed to load students'));
+  }
 
   useEffect(() => {
     // Fetch students and sessions in parallel
@@ -31,6 +43,29 @@ export default function FacultyDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  async function handleAdd(e) {
+    e.preventDefault();
+    setError(null);
+    try {
+      await api.post('/students', {
+        ...form,
+        facultyId: user?.id,  // Faculty creates for themselves
+      });
+      setSuccess(`Student "${form.name}" added.`);
+      setForm({ name: '', gender: '', dept: '', cutOff: '', community: '', quota: '', status: 'pending' });
+      setShowForm(false);
+      loadStudents();
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to add student');
+    }
+  }
+
+  function update(field, value) {
+    setForm(p => ({ ...p, [field]: value }));
+  }
+
   return (
     <div className="faculty-dashboard-page" style={styles.page}>
       {/* ── Header ── */}
@@ -41,6 +76,9 @@ export default function FacultyDashboard() {
         </div>
         <button className="faculty-dashboard-logout" onClick={logout} style={styles.logoutBtn}>Logout</button>
       </header>
+
+      {error   && <div style={styles.error}>{error}</div>}
+      {success && <div style={styles.success}>{success}</div>}
 
       {/* ── Stats Bar ── */}
       <div className="faculty-dashboard-stats" style={styles.statsRow}>
@@ -68,6 +106,42 @@ export default function FacultyDashboard() {
           <span style={styles.statLabel}>Students</span>
         </div>
       </div>
+
+      {/* ── Add Student Form ── */}
+      <button className="faculty-dashboard-add-btn" onClick={() => setShowForm(f => !f)} style={styles.addBtn}>
+        {showForm ? 'Cancel' : '+ Add Student'}
+      </button>
+
+      {showForm && (
+        <form className="faculty-dashboard-form" onSubmit={handleAdd} style={styles.form}>
+          <h3 style={{ margin: '0 0 1rem' }}>Add New Student</h3>
+          <div className="faculty-dashboard-grid" style={styles.grid}>
+            <input className="faculty-dashboard-input" style={styles.input} placeholder="Full Name" required
+              value={form.name} onChange={e => update('name', e.target.value)} />
+            <select className="faculty-dashboard-input" style={styles.input} required
+              value={form.gender} onChange={e => update('gender', e.target.value)}>
+              <option value="">Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+            <input className="faculty-dashboard-input" style={styles.input} placeholder="Dept (e.g. CSE)" required
+              value={form.dept} onChange={e => update('dept', e.target.value)} />
+            <input className="faculty-dashboard-input" style={styles.input} placeholder="Cut-off (%)" required type="number" step="0.01"
+              value={form.cutOff} onChange={e => update('cutOff', e.target.value)} />
+            <input className="faculty-dashboard-input" style={styles.input} placeholder="Community (e.g. OC, BC)" required
+              value={form.community} onChange={e => update('community', e.target.value)} />
+            <input className="faculty-dashboard-input" style={styles.input} placeholder="Quota (e.g. Government, Management)" required
+              value={form.quota} onChange={e => update('quota', e.target.value)} />
+            <select className="faculty-dashboard-input" style={styles.input} value={form.status} onChange={e => update('status', e.target.value)}>
+              <option value="pending">Pending</option>
+              <option value="admitted">Admitted</option>
+              <option value="counselled">Counselled</option>
+            </select>
+          </div>
+          <button className="faculty-dashboard-submit" type="submit" style={{ ...styles.addBtn, marginTop: '0.75rem' }}>Add Student</button>
+        </form>
+      )}
 
       {/* ── Student List ── */}
       <section className="faculty-dashboard-section" style={styles.section}>
@@ -120,10 +194,16 @@ const styles = {
   heading:      { margin: 0, fontSize: '1.5rem', color: '#1a1a2e' },
   subheading:   { margin: 0, color: '#666', fontSize: '0.9rem' },
   logoutBtn:    { background: '#eee', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' },
+  addBtn:       { background: '#1a1a2e', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: 8, cursor: 'pointer', fontFamily: 'sans-serif', marginBottom: '1rem' },
   statsRow:     { display: 'flex', gap: '1rem', marginBottom: '1.5rem' },
   statCard:     { flex: 1, background: '#fff', borderRadius: 10, padding: '1rem', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
   statNumber:   { display: 'block', fontSize: '2rem', fontWeight: 700, color: '#1a1a2e' },
   statLabel:    { fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', letterSpacing: 1 },
+  form:         { background: '#fff', borderRadius: 10, padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', marginBottom: '1rem' },
+  grid:         { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0.75rem' },
+  input:        { padding: '0.6rem 0.75rem', border: '1px solid #ddd', borderRadius: 6, fontSize: '0.9rem', width: '100%', boxSizing: 'border-box' },
+  error:        { background: '#fee', border: '1px solid #fcc', color: '#c00', padding: '0.75rem', borderRadius: 6, marginBottom: '1rem' },
+  success:      { background: '#efe', border: '1px solid #cfc', color: '#060', padding: '0.75rem', borderRadius: 6, marginBottom: '1rem' },
   section:      { background: '#fff', borderRadius: 10, padding: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
   sectionTitle: { margin: '0 0 1rem', fontSize: '1.1rem', color: '#333' },
   muted:        { color: '#999', textAlign: 'center', padding: '2rem 0' },
