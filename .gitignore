@@ -4,8 +4,6 @@ node_modules/
 dist/
 build/
 backend/node_modules/
-.DS_Store
-Thumbs.db
 .vscode/ 
 review.md 
 file_explanation.md
