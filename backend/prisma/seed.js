@@ -4,16 +4,14 @@ import 'dotenv/config';
 async function main() {
   console.log('Seeding database...');
 
-  // ─── Departments ─────────────────────────────────────────────────────────
-  // upsert = create if not exists, update if exists.
-  // This means you can safely re-run the seed without creating duplicates.
   const departments = [
-    { code: 'CSE',   name: 'Computer Science and Engineering' },
-    { code: 'ECE',   name: 'Electronics and Communication Engineering' },
-    { code: 'MECH',  name: 'Mechanical Engineering' },
-    { code: 'CIVIL', name: 'Civil Engineering' },
+    { code: 'CS',   name: 'Computer Science and Engineering' },
+    { code: 'EC',   name: 'Electronics and Communication Engineering' },
+    { code: 'ME',  name: 'Mechanical Engineering' },
+    { code: 'EE', name: 'Electrical and Electronics Engineering' },
     { code: 'IT',    name: 'Information Technology' },
-    { code: 'AIDS',  name: 'Artificial Intelligence and Data Science' },
+    { code: 'AD',  name: 'Artificial Intelligence and Data Science' },
+    { code: 'EI', name: 'Electronics and Instrumentation Engineering'}
   ];
 
   for (const dept of departments) {
@@ -25,19 +23,15 @@ async function main() {
   }
   console.log(`✓ ${departments.length} departments seeded`);
 
-  // ─── Admin placeholder ────────────────────────────────────────────────────
-  // We seed the admin record now so it exists.
-  // The 'id' here is a placeholder — it will be replaced with the real
-  // Google sub ID the first time the admin logs in (via upsert in passport.js).
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) {
     console.warn('⚠ ADMIN_EMAIL not set in .env — skipping admin seed');
   } else {
     await prisma.admin.upsert({
       where:  { email: adminEmail },
-      update: {}, // don't overwrite anything if it already exists
+      update: {}, 
       create: {
-        id:    `seed-${Date.now()}`,   // unique placeholder per seed run
+        id:    `seed-${Date.now()}`,   
         email: adminEmail,
         name:  'Administrator',
       },
