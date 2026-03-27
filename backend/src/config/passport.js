@@ -15,8 +15,9 @@ passport.use(
       try {
         const email = profile.emails[0].value;
         const googleId = profile.id;
-        const emailLocal = email.split('@')[0]; 
-        const [nameFromEmail, deptCode] = emailLocal.split('.'); 
+        const emailLocal = email.split('@')[0];
+        const [nameFromEmail, deptCode] = emailLocal.split('.');
+        const dept = deptCode ? deptCode.toUpperCase() : 'CSE'; // Default to CSE if no dept in email 
 
         if (email === env.ADMIN_EMAIL) {
           const admin = await prisma.admin.upsert({
@@ -48,7 +49,7 @@ passport.use(
             id:   googleId,
             email,
             name: nameFromEmail,
-            dept: deptCode.toUpperCase(), // Auto-assign from email
+            dept: dept,
           },
         });
 
