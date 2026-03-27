@@ -20,11 +20,12 @@ model Faculty {
   id        String    @id @unique
   email     String    @unique
   name      String
-  dept      String    
+  dept      String
   createdAt DateTime  @default(now()) @map("created_at")
 
-  students  Student[]
-  sessions  Session[]
+  students    Student[]
+  sessions    Session[]
+  attendances Attendance[]
 
   @@map("faculty")
 }
@@ -49,28 +50,38 @@ faculty   Faculty  @relation(fields: [facultyId], references: [id], onDelete: Ca
 }
 
 model Session {
-  id          Int       @id @default(autoincrement())
-  startTime   DateTime  @map("start_time")
-  endTime     DateTime? @map("end_time")   
-  qrToken     String    @unique @map("qr_token")
-  qrExpiresAt DateTime  @map("qr_expires_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
+  id        Int       @id @default(autoincrement())
+  startTime DateTime  @map("start_time")
+  endTime   DateTime? @map("end_time")
+  qrToken   String    @map("qr_token")
+  createdAt DateTime  @default(now()) @map("created_at")
 
-  facultyId   String    @map("faculty_id")
-  faculty     Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  facultyId String    @map("faculty_id")
+  faculty   Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
 }
 
 model ActiveQR {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique               
-  expiresAt DateTime @map("expires_at")    
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id               Int      @id @default(autoincrement())
+  attendanceToken  String   @unique @map("attendance_token")
+  sessionToken     String   @unique @map("session_token")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   @@map("active_qr")
 }
 
+model Attendance {
+  id          Int       @id @default(autoincrement())
+  checkinTime DateTime  @map("checkin_time")
+  checkoutTime DateTime? @map("checkout_time")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  facultyId String    @map("faculty_id")
+  faculty   Faculty   @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+
+  @@map("attendance")
+}
 
 model Department {
   code String @id @unique 

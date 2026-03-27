@@ -44,13 +44,28 @@ export default function FacultyDashboard() {
 
       {/* ── Stats Bar ── */}
       <div className="faculty-dashboard-stats" style={styles.statsRow}>
+        <button
+          onClick={() => navigate('/faculty/sessions')}
+          style={{
+            ...styles.statCard,
+            cursor: 'pointer',
+            transition: 'transform 0.2s, box-shadow 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+          }}
+        >
+          <span style={styles.statNumber}>{sessions.total}</span>
+          <span style={styles.statLabel}>Sessions Done</span>
+        </button>
         <div className="faculty-dashboard-stat-card" style={styles.statCard}>
           <span style={styles.statNumber}>{students.length}</span>
           <span style={styles.statLabel}>Students</span>
-        </div>
-        <div className="faculty-dashboard-stat-card" style={styles.statCard}>
-          <span style={styles.statNumber}>{sessions.total}</span>
-          <span style={styles.statLabel}>Sessions Done</span>
         </div>
       </div>
 

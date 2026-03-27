@@ -6,9 +6,11 @@ import Login            from './pages/Login';
 import AuthCallback     from './pages/AuthCallback';
 import FacultyDashboard from './pages/FacultyDashboard';
 import ScanQR           from './pages/ScanQR';
+import FacultySessions  from './pages/FacultySessions';
 import AdminDashboard   from './pages/AdminDashboard';
 import AdminFaculty     from './pages/AdminFaculty';
 import AdminStudents    from './pages/AdminStudents';
+import AdminSessions    from './pages/AdminSessions';
 import KioskQR          from './pages/KioskQR';
 
 // App: defines all routes and wraps everything in AuthProvider.
@@ -36,6 +38,11 @@ export default function App() {
               <ScanQR />
             </ProtectedRoute>
           } />
+          <Route path="/faculty/sessions" element={
+            <ProtectedRoute requiredRole="faculty">
+              <FacultySessions />
+            </ProtectedRoute>
+          } />
 
           {/* ── Admin ──────────────────────────────────────────── */}
           <Route path="/admin" element={
@@ -51,6 +58,11 @@ export default function App() {
           <Route path="/admin/students" element={
             <ProtectedRoute requiredRole="admin">
               <AdminStudents />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/sessions" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminSessions />
             </ProtectedRoute>
           } />
           {/* Kiosk: full-screen QR for the dedicated display device */}

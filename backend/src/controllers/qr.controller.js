@@ -1,9 +1,9 @@
-import { getCurrentQRImage } from '../services/qr.service.js';
+import { getCurrentQRs } from '../services/qr.service.js';
 import { handleQRScan } from '../services/session.service.js';
 
 export async function getQR(req, res, next) {
   try {
-    const data = await getCurrentQRImage();
+    const data = await getCurrentQRs();
     res.json(data);
   } catch (err) {
     next(err);

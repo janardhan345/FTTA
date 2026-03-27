@@ -4,6 +4,18 @@ import 'dotenv/config';
 async function main() {
   console.log('Seeding database...');
 
+  // Initialize static QR tokens
+  await prisma.activeQR.upsert({
+    where:  { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      attendanceToken: 'FTTA_ATTENDANCE',
+      sessionToken:    'FTTA_SESSION',
+    },
+  });
+  console.log('✓ Static QR tokens initialized');
+
   const departments = [
     { code: 'CS',   name: 'Computer Science and Engineering' },
     { code: 'EC',   name: 'Electronics and Communication Engineering' },

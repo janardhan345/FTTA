@@ -144,6 +144,7 @@ export default function AdminDashboard() {
       <div className="admin-dashboard-nav" style={styles.navLinks}>
         <Link to="/admin/faculty"  style={styles.navLink}>Manage Faculty →</Link>
         <Link to="/admin/students" style={styles.navLink}>Manage Students →</Link>
+        <Link to="/admin/sessions" style={styles.navLink}>View Sessions →</Link>
       </div>
     </div>
   );
