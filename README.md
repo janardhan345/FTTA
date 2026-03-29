@@ -1,6 +1,6 @@
 # FTTA
 
-Faculty Time Tracking and Availability (FTTA) is a full-stack web app for managing faculty counselling sessions with live availability tracking using rotating QR codes.
+Faculty Time Tracking and Availability (FTTA) is a full-stack web app for managing faculty counselling sessions with live availability tracking using QR codes.
 
 ## Note: This application is only built for a private institution, can't sign in or use the application if the domain doesn't match.
 
