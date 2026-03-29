@@ -7,7 +7,7 @@ import api from '../api/axios';
 // AdminDashboard: the main page for the admin.
 // Shows:
 //   1. Stats summary (total faculty, students, sessions)
-//   2. Real-time faculty availability table (who is busy vs available)
+//   2. Real-time faculty availability table (available, busy, not available)
 //   3. Quick assign: reassign a student from one faculty to another
 //
 // Route: /admin (admin only)
@@ -35,6 +35,8 @@ export default function AdminDashboard() {
   }
 
   const available = availability.filter(f => f.status === 'available');
+  const busy = availability.filter(f => f.status === 'busy');
+  const notAvailable = availability.filter(f => f.status === 'not_available');
 
   return (
     <div className="admin-dashboard-page" style={styles.page}>
@@ -69,7 +71,9 @@ export default function AdminDashboard() {
       <section className="admin-dashboard-section" style={styles.section}>
         <h2 style={styles.sectionTitle}>
           Faculty Availability
-          <span style={styles.badge}>{available.length} available now</span>
+          <span style={styles.badge}>
+            {available.length} available | {busy.length} busy | {notAvailable.length} not available
+          </span>
         </h2>
 
         {loading && <p style={styles.muted}>Loading...</p>}
@@ -84,18 +88,25 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {availability.map(f => (
-                <tr key={f.id} style={{ background: f.status === 'busy' ? '#fff8e1' : '#fff' }}>
+              {availability.map(f => {
+                const statusMeta = f.status === 'busy'
+                  ? { label: '● Busy', rowBg: '#fff8e1', pillBg: '#ffecb3', pillColor: '#b26a00' }
+                  : f.status === 'available'
+                    ? { label: '✓ Available', rowBg: '#fff', pillBg: '#e8f5e9', pillColor: '#2e7d32' }
+                    : { label: '○ Not Available', rowBg: '#f9fafb', pillBg: '#eceff1', pillColor: '#546e7a' };
+
+                return (
+                <tr key={f.id} style={{ background: statusMeta.rowBg }}>
                   <td style={styles.td}>{f.name}</td>
                   <td style={styles.td}>{f.dept}</td>
                   <td style={styles.td}>{f.studentCount}</td>
                   <td style={styles.td}>
                     <span style={{
                       ...styles.statusPill,
-                      background: f.status === 'busy' ? '#ffecb3' : '#e8f5e9',
-                      color:      f.status === 'busy' ? '#b26a00' : '#2e7d32',
+                      background: statusMeta.pillBg,
+                      color:      statusMeta.pillColor,
                     }}>
-                      {f.status === 'busy' ? '● Busy' : '✓ Available'}
+                      {statusMeta.label}
                     </span>
                   </td>
                   <td style={styles.td}>
@@ -104,7 +115,8 @@ export default function AdminDashboard() {
                       : '—'}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -21,6 +21,9 @@ export async function getFacultyAvailability(req, res, next) {
     const availability = faculty.map(f => {
       const isCheckedIn = f.attendances.length > 0 && !f.attendances[0].checkoutTime;
       const hasActiveSession = f.sessions.length > 0;
+      const status = hasActiveSession
+        ? 'busy'
+        : (isCheckedIn ? 'available' : 'not_available');
 
       return {
         id:              f.id,
@@ -28,7 +31,7 @@ export async function getFacultyAvailability(req, res, next) {
         email:           f.email,
         dept:            f.dept,
         studentCount:    f._count.students,
-        status:          isCheckedIn && !hasActiveSession ? 'available' : 'busy',
+        status,
         activeSessionId: f.sessions[0]?.id ?? null,
         sessionStartAt:  f.sessions[0]?.startTime ?? null,
       };
