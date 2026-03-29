@@ -4,6 +4,11 @@ export async function getFacultyAvailability(req, res, next) {
   try {
     const faculty = await prisma.faculty.findMany({
       include: {
+        attendances: {
+          orderBy: { checkinTime: 'desc' },
+          take: 1,
+          select: { checkinTime: true, checkoutTime: true },
+        },
         sessions: {
           where:  { endTime: null },
           select: { id: true, startTime: true },
@@ -13,16 +18,21 @@ export async function getFacultyAvailability(req, res, next) {
       orderBy: { name: 'asc' },
     });
 
-    const availability = faculty.map(f => ({
-      id:              f.id,
-      name:            f.name,
-      email:           f.email,
-      dept:            f.dept,
-      studentCount:    f._count.students,
-      status:          f.sessions.length > 0 ? 'busy' : 'available',
-      activeSessionId: f.sessions[0]?.id ?? null,
-      sessionStartAt:  f.sessions[0]?.startTime ?? null,
-    }));
+    const availability = faculty.map(f => {
+      const isCheckedIn = f.attendances.length > 0 && !f.attendances[0].checkoutTime;
+      const hasActiveSession = f.sessions.length > 0;
+
+      return {
+        id:              f.id,
+        name:            f.name,
+        email:           f.email,
+        dept:            f.dept,
+        studentCount:    f._count.students,
+        status:          isCheckedIn && !hasActiveSession ? 'available' : 'busy',
+        activeSessionId: f.sessions[0]?.id ?? null,
+        sessionStartAt:  f.sessions[0]?.startTime ?? null,
+      };
+    });
 
     res.json(availability);
   } catch (err) {

@@ -34,7 +34,6 @@ export default function AdminDashboard() {
     }
   }
 
-  const busy      = availability.filter(f => f.status === 'busy');
   const available = availability.filter(f => f.status === 'available');
 
   return (
@@ -70,7 +69,7 @@ export default function AdminDashboard() {
       <section className="admin-dashboard-section" style={styles.section}>
         <h2 style={styles.sectionTitle}>
           Faculty Availability
-          <span style={styles.badge}>{busy.length} in session</span>
+          <span style={styles.badge}>{available.length} available now</span>
         </h2>
 
         {loading && <p style={styles.muted}>Loading...</p>}
