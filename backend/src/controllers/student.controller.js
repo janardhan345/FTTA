@@ -95,19 +95,33 @@ export async function updateStudent(req, res, next) {
       // Admin can update everything
       const { name, gender, dept, cutOff, community, quota, status, facultyId } = req.body;
       data = { name, gender, dept, community, quota, status, facultyId };
-      if (cutOff !== undefined) data.cutOff = parseFloat(cutOff);
-    } else {
-      // Faculty can only update status (counselling state of their student)
-      const { status } = req.body;
-      if (!status) {
-        return res.status(400).json({ error: 'Faculty can only update status' });
+      if (cutOff !== undefined) {
+        const parsedCutOff = parseFloat(cutOff);
+        if (Number.isNaN(parsedCutOff)) {
+          return res.status(400).json({ error: 'cutOff must be a valid number' });
+        }
+        data.cutOff = parsedCutOff;
       }
-      data = { status };
+    } else {
+      // Faculty can update details for their own students (but not reassign faculty)
+      const { name, gender, dept, cutOff, community, quota, status } = req.body;
+      data = { name, gender, dept, community, quota, status };
+      if (cutOff !== undefined) {
+        const parsedCutOff = parseFloat(cutOff);
+        if (Number.isNaN(parsedCutOff)) {
+          return res.status(400).json({ error: 'cutOff must be a valid number' });
+        }
+        data.cutOff = parsedCutOff;
+      }
     }
 
     const cleanData = Object.fromEntries(
       Object.entries(data).filter(([, v]) => v !== undefined)
     );
+
+    if (Object.keys(cleanData).length === 0) {
+      return res.status(400).json({ error: 'Provide at least one field to update' });
+    }
 
     const updated = await prisma.student.update({
       where: { id: req.params.id },
