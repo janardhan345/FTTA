@@ -51,6 +51,19 @@ export async function reassignStudent(req, res, next) {
       return res.status(400).json({ error: 'studentId and newFacultyId are required' });
     }
 
+    const existingStudent = await prisma.student.findUnique({
+      where: { id: studentId },
+      select: { id: true, facultyId: true },
+    });
+
+    if (!existingStudent) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    if (existingStudent.facultyId === newFacultyId) {
+      return res.status(400).json({ error: 'Student is already assigned to this faculty' });
+    }
+
     // Confirming whether the new faculty exists before assigning
     const faculty = await prisma.faculty.findUnique({ where: { id: newFacultyId } });
     if (!faculty) {
@@ -65,9 +78,6 @@ export async function reassignStudent(req, res, next) {
 
     res.json(student);
   } catch (err) {
-    if (err.code === 'P2025') {
-      return res.status(404).json({ error: 'Student not found' });
-    }
     next(err);
   }
 }

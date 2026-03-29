@@ -15,28 +15,71 @@ export default function AdminDashboard() {
   const { user, logout }           = useAuth();
   const { availability, loading }  = useAvailability(5000);
   const [stats,    setStats]       = useState(null);
+  const [students, setStudents]    = useState([]);
+  const [studentQuery, setStudentQuery] = useState('');
+  const [assigning, setAssigning]  = useState(false);
   const [assignForm, setAssignForm] = useState({ studentId: '', newFacultyId: '' });
   const [assignMsg,  setAssignMsg]  = useState(null);
 
   useEffect(() => {
-    api.get('/admin/stats').then(({ data }) => setStats(data));
+    Promise.all([
+      api.get('/admin/stats'),
+      api.get('/students'),
+    ]).then(([statsRes, studentsRes]) => {
+      setStats(statsRes.data);
+      setStudents(studentsRes.data);
+    });
   }, []);
+
+  function loadStudents() {
+    api.get('/students').then(({ data }) => setStudents(data));
+  }
 
   async function handleAssign(e) {
     e.preventDefault();
     setAssignMsg(null);
+    setAssigning(true);
     try {
       const { data } = await api.patch('/admin/assign', assignForm);
       setAssignMsg({ type: 'ok', text: `Student reassigned to ${data.faculty?.name || 'new faculty'}` });
       setAssignForm({ studentId: '', newFacultyId: '' });
+      setStudentQuery('');
+      loadStudents();
     } catch (err) {
       setAssignMsg({ type: 'err', text: err.response?.data?.error || 'Assignment failed' });
+    } finally {
+      setAssigning(false);
     }
   }
 
   const available = availability.filter(f => f.status === 'available');
   const busy = availability.filter(f => f.status === 'busy');
   const notAvailable = availability.filter(f => f.status === 'not_available');
+
+  const normalizedQuery = studentQuery.trim().toLowerCase();
+  const filteredStudents = students.filter(s => {
+    if (!normalizedQuery) return true;
+    return (
+      s.name?.toLowerCase().includes(normalizedQuery) ||
+      s.dept?.toLowerCase().includes(normalizedQuery) ||
+      s.faculty?.name?.toLowerCase().includes(normalizedQuery)
+    );
+  });
+
+  const selectedStudent = students.find(s => s.id === assignForm.studentId) || null;
+  const sortedFaculty = [...availability].sort((a, b) => {
+    const weight = { available: 0, busy: 1, not_available: 2 };
+    const byStatus = (weight[a.status] ?? 9) - (weight[b.status] ?? 9);
+    if (byStatus !== 0) return byStatus;
+    return a.name.localeCompare(b.name);
+  });
+
+  function pickFirstAvailableFaculty() {
+    const quickPick = available.find(f => f.id !== selectedStudent?.facultyId);
+    if (quickPick) {
+      setAssignForm(p => ({ ...p, newFacultyId: quickPick.id }));
+    }
+  }
 
   return (
     <div className="admin-dashboard-page" style={styles.page}>
@@ -129,20 +172,76 @@ export default function AdminDashboard() {
           <input
             className="admin-dashboard-input"
             style={styles.input}
-            placeholder="Student ID"
-            value={assignForm.studentId}
-            onChange={e => setAssignForm(p => ({ ...p, studentId: e.target.value }))}
-            required
+            placeholder="Search student by name, dept, or current faculty"
+            value={studentQuery}
+            onChange={e => setStudentQuery(e.target.value)}
           />
-          <input
+
+          <select
             className="admin-dashboard-input"
             style={styles.input}
-            placeholder="New Faculty ID"
-            value={assignForm.newFacultyId}
-            onChange={e => setAssignForm(p => ({ ...p, newFacultyId: e.target.value }))}
+            value={assignForm.studentId}
+            onChange={e => setAssignForm({ studentId: e.target.value, newFacultyId: '' })}
             required
-          />
-          <button className="admin-dashboard-submit" type="submit" style={styles.submitBtn}>Reassign</button>
+          >
+            <option value="">Select Student ({filteredStudents.length})</option>
+            {filteredStudents.map(student => (
+              <option key={student.id} value={student.id}>
+                {student.name} - {student.dept} (Current: {student.faculty?.name || 'Unassigned'})
+              </option>
+            ))}
+          </select>
+
+          {selectedStudent && (
+            <p style={styles.helperText}>
+              Current Faculty: <strong>{selectedStudent.faculty?.name || 'Unassigned'}</strong>
+            </p>
+          )}
+
+          <div style={styles.assignActionRow}>
+            <select
+              className="admin-dashboard-input"
+              style={styles.input}
+              value={assignForm.newFacultyId}
+              onChange={e => setAssignForm(p => ({ ...p, newFacultyId: e.target.value }))}
+              required
+              disabled={!assignForm.studentId}
+            >
+              <option value="">Select New Faculty</option>
+              {sortedFaculty.map(f => (
+                <option
+                  key={f.id}
+                  value={f.id}
+                  disabled={f.id === selectedStudent?.facultyId}
+                >
+                  {f.name} - {f.dept} [{f.status.replace('_', ' ')}]
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={pickFirstAvailableFaculty}
+              style={styles.quickPickBtn}
+              disabled={!assignForm.studentId || available.length === 0}
+            >
+              Pick First Available
+            </button>
+          </div>
+
+          <button
+            className="admin-dashboard-submit"
+            type="submit"
+            style={styles.submitBtn}
+            disabled={
+              assigning ||
+              !assignForm.studentId ||
+              !assignForm.newFacultyId ||
+              assignForm.newFacultyId === selectedStudent?.facultyId
+            }
+          >
+            {assigning ? 'Reassigning...' : 'Reassign'}
+          </button>
         </form>
         {assignMsg && (
           <p style={{ color: assignMsg.type === 'ok' ? 'green' : 'red', marginTop: '0.5rem' }}>
@@ -182,6 +281,9 @@ const styles = {
   statusPill:   { padding: '3px 10px', borderRadius: 20, fontSize: '0.8rem', fontWeight: 600 },
   form:         { display: 'flex', gap: '0.75rem', flexWrap: 'wrap' },
   input:        { flex: 1, minWidth: 200, padding: '0.6rem 0.75rem', border: '1px solid #ddd', borderRadius: 6, fontSize: '0.9rem' },
+  helperText:   { margin: '0.25rem 0 0', width: '100%', color: '#4a5568', fontSize: '0.85rem' },
+  assignActionRow: { display: 'flex', gap: '0.75rem', width: '100%', flexWrap: 'wrap' },
+  quickPickBtn: { background: '#edf2f7', color: '#1a1a2e', border: '1px solid #cbd5e0', padding: '0.6rem 0.9rem', borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap' },
   submitBtn:    { background: '#1a1a2e', color: '#fff', border: 'none', padding: '0.6rem 1.25rem', borderRadius: 6, cursor: 'pointer', fontFamily: 'sans-serif', fontWeight: 600 },
   navLinks:     { display: 'flex', gap: '1rem', marginTop: '0.5rem' },
   navLink:      { color: '#1a1a2e', fontWeight: 600, textDecoration: 'none', fontSize: '0.95rem' },
