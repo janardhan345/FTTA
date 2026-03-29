@@ -19,6 +19,7 @@ export default function AdminDashboard() {
   const [deletedRecords, setDeletedRecords] = useState({ deletedStudents: [], deletedFaculty: [] });
   const [restoreMsg, setRestoreMsg] = useState(null);
   const [restoringKey, setRestoringKey] = useState('');
+  const [showDeleted, setShowDeleted] = useState(false);
   const [studentQuery, setStudentQuery] = useState('');
   const [assigning, setAssigning]  = useState(false);
   const [assignForm, setAssignForm] = useState({ studentId: '', newFacultyId: '' });
@@ -95,6 +96,7 @@ export default function AdminDashboard() {
   const available = availability.filter(f => f.status === 'available');
   const busy = availability.filter(f => f.status === 'busy');
   const notAvailable = availability.filter(f => f.status === 'not_available');
+  const totalDeleted = deletedRecords.deletedStudents.length + deletedRecords.deletedFaculty.length;
 
   const normalizedQuery = studentQuery.trim().toLowerCase();
   const filteredStudents = students.filter(s => {
@@ -205,79 +207,95 @@ export default function AdminDashboard() {
 
       {/* ── Restore Deleted Records ── */}
       <section className="admin-dashboard-section" style={styles.section}>
-        <h2 style={styles.sectionTitle}>
-          Restore Deleted Records
+        <button
+          type="button"
+          onClick={() => setShowDeleted(v => !v)}
+          style={styles.deletedToggleBtn}
+        >
+          <span style={styles.deletedToggleLabel}>
+            {showDeleted ? '📂' : '📁'} Deleted Records {showDeleted ? '▲' : '▼'}
+          </span>
           <span style={styles.badge}>
             {deletedRecords.deletedStudents.length} students | {deletedRecords.deletedFaculty.length} faculty
           </span>
-        </h2>
+        </button>
 
-        {restoreMsg && (
-          <p style={{ color: restoreMsg.type === 'ok' ? 'green' : 'red', marginBottom: '0.75rem' }}>
-            {restoreMsg.text}
+        {!showDeleted && (
+          <p style={styles.muted}>
+            {totalDeleted > 0 ? 'Expand to view and restore deleted records.' : 'No deleted records.'}
           </p>
         )}
 
-        <div style={styles.restoreGrid}>
-          <div style={styles.restoreCard}>
-            <h3 style={styles.restoreHeading}>Deleted Students</h3>
-            {deletedRecords.deletedStudents.length === 0 && (
-              <p style={styles.muted}>No deleted students.</p>
+        {showDeleted && (
+          <>
+            {restoreMsg && (
+              <p style={{ color: restoreMsg.type === 'ok' ? 'green' : 'red', marginBottom: '0.75rem' }}>
+                {restoreMsg.text}
+              </p>
             )}
 
-            {deletedRecords.deletedStudents.map(student => {
-              const facultyDeleted = Boolean(student.faculty?.deletedAt);
-              const isRestoring = restoringKey === `student:${student.id}`;
+            <div style={styles.restoreGrid}>
+              <div style={styles.restoreCard}>
+                <h3 style={styles.restoreHeading}>Deleted Students</h3>
+                {deletedRecords.deletedStudents.length === 0 && (
+                  <p style={styles.muted}>No deleted students.</p>
+                )}
 
-              return (
-                <div key={student.id} style={styles.restoreRow}>
-                  <div>
-                    <strong>{student.name}</strong>
-                    <p style={styles.restoreMeta}>Dept: {student.dept}</p>
-                    <p style={styles.restoreMeta}>Faculty: {student.faculty?.name || 'Unknown'}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRestore('student', student)}
-                    style={styles.restoreBtn}
-                    disabled={facultyDeleted || isRestoring}
-                    title={facultyDeleted ? 'Restore faculty first' : 'Restore student'}
-                  >
-                    {isRestoring ? 'Restoring...' : 'Restore'}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                {deletedRecords.deletedStudents.map(student => {
+                  const facultyDeleted = Boolean(student.faculty?.deletedAt);
+                  const isRestoring = restoringKey === `student:${student.id}`;
 
-          <div style={styles.restoreCard}>
-            <h3 style={styles.restoreHeading}>Deleted Faculty</h3>
-            {deletedRecords.deletedFaculty.length === 0 && (
-              <p style={styles.muted}>No deleted faculty.</p>
-            )}
+                  return (
+                    <div key={student.id} style={styles.restoreRow}>
+                      <div>
+                        <strong>{student.name}</strong>
+                        <p style={styles.restoreMeta}>Dept: {student.dept}</p>
+                        <p style={styles.restoreMeta}>Faculty: {student.faculty?.name || 'Unknown'}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRestore('student', student)}
+                        style={styles.restoreBtn}
+                        disabled={facultyDeleted || isRestoring}
+                        title={facultyDeleted ? 'Restore faculty first' : 'Restore student'}
+                      >
+                        {isRestoring ? 'Restoring...' : 'Restore'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
 
-            {deletedRecords.deletedFaculty.map(faculty => {
-              const isRestoring = restoringKey === `faculty:${faculty.id}`;
-              return (
-                <div key={faculty.id} style={styles.restoreRow}>
-                  <div>
-                    <strong>{faculty.name}</strong>
-                    <p style={styles.restoreMeta}>{faculty.email}</p>
-                    <p style={styles.restoreMeta}>Dept: {faculty.dept}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRestore('faculty', faculty)}
-                    style={styles.restoreBtn}
-                    disabled={isRestoring}
-                  >
-                    {isRestoring ? 'Restoring...' : 'Restore'}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+              <div style={styles.restoreCard}>
+                <h3 style={styles.restoreHeading}>Deleted Faculty</h3>
+                {deletedRecords.deletedFaculty.length === 0 && (
+                  <p style={styles.muted}>No deleted faculty.</p>
+                )}
+
+                {deletedRecords.deletedFaculty.map(faculty => {
+                  const isRestoring = restoringKey === `faculty:${faculty.id}`;
+                  return (
+                    <div key={faculty.id} style={styles.restoreRow}>
+                      <div>
+                        <strong>{faculty.name}</strong>
+                        <p style={styles.restoreMeta}>{faculty.email}</p>
+                        <p style={styles.restoreMeta}>Dept: {faculty.dept}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRestore('faculty', faculty)}
+                        style={styles.restoreBtn}
+                        disabled={isRestoring}
+                      >
+                        {isRestoring ? 'Restoring...' : 'Restore'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </section>
 
       {/* ── Quick Assign ── */}
@@ -392,6 +410,8 @@ const styles = {
   assignActionRow: { display: 'flex', gap: '0.75rem', width: '100%', flexWrap: 'wrap' },
   quickPickBtn: { background: '#edf2f7', color: '#1a1a2e', border: '1px solid #cbd5e0', padding: '0.6rem 0.9rem', borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap' },
   submitBtn:    { background: '#1a1a2e', color: '#fff', border: 'none', padding: '0.6rem 1.25rem', borderRadius: 6, cursor: 'pointer', fontFamily: 'sans-serif', fontWeight: 600 },
+  deletedToggleBtn: { width: '100%', border: '1px solid #e5e7eb', background: '#f8fafc', borderRadius: 8, padding: '0.7rem 0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: '0.8rem' },
+  deletedToggleLabel: { fontSize: '0.95rem', fontWeight: 600, color: '#1f2937' },
   restoreGrid:  { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.9rem' },
   restoreCard:  { border: '1px solid #ececec', borderRadius: 10, padding: '0.85rem' },
   restoreHeading: { margin: '0 0 0.75rem', fontSize: '1rem', color: '#1a1a2e' },
