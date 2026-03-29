@@ -25,6 +25,7 @@ export default function FacultyDashboard() {
   const [editForm, setEditForm] = useState({
     name: '', gender: '', dept: '', cutOff: '', community: '', quota: '', status: 'pending',
   });
+  const [assignmentNotice, setAssignmentNotice] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -45,6 +46,36 @@ export default function FacultyDashboard() {
         setSessions({ total: sessionsRes.data.total });
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    async function pollNotifications() {
+      try {
+        const { data } = await api.get('/students/notifications');
+        const notifications = data.notifications || [];
+
+        if (notifications.length === 0) {
+          return;
+        }
+
+        const studentNames = notifications.map(n => n.studentName).filter(Boolean);
+        if (studentNames.length > 0) {
+          const message = studentNames.length === 1
+            ? `New assignment: ${studentNames[0]}`
+            : `New assignments: ${studentNames.join(', ')}`;
+          setAssignmentNotice(message);
+          setTimeout(() => setAssignmentNotice(null), 6000);
+        }
+
+        loadStudents();
+      } catch {
+        // Notification polling failures should not break dashboard behavior.
+      }
+    }
+
+    pollNotifications();
+    const interval = setInterval(pollNotifications, 6000);
+    return () => clearInterval(interval);
   }, []);
 
   async function handleAdd(e) {
@@ -120,6 +151,7 @@ export default function FacultyDashboard() {
 
       {error   && <div style={styles.error}>{error}</div>}
       {success && <div style={styles.success}>{success}</div>}
+      {assignmentNotice && <div style={styles.notice}>{assignmentNotice}</div>}
 
       {/* ── Stats Bar ── */}
       <div className="faculty-dashboard-stats" style={styles.statsRow}>
@@ -287,6 +319,7 @@ const styles = {
   input:        { padding: '0.6rem 0.75rem', border: '1px solid #ddd', borderRadius: 6, fontSize: '0.9rem', width: '100%', boxSizing: 'border-box' },
   error:        { background: '#fee', border: '1px solid #fcc', color: '#c00', padding: '0.75rem', borderRadius: 6, marginBottom: '1rem' },
   success:      { background: '#efe', border: '1px solid #cfc', color: '#060', padding: '0.75rem', borderRadius: 6, marginBottom: '1rem' },
+  notice:       { background: '#e6f7ff', border: '1px solid #b6e0fe', color: '#0b5cab', padding: '0.75rem', borderRadius: 6, marginBottom: '1rem' },
   section:      { background: '#fff', borderRadius: 10, padding: '1rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' },
   sectionTitle: { margin: '0 0 1rem', fontSize: '1.1rem', color: '#333' },
   muted:        { color: '#999', textAlign: 'center', padding: '2rem 0' },

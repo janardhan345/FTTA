@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getStudents,
   createStudent,
+  getMyAssignmentNotifications,
   getStudentById,
   updateStudent,
   deleteStudent,
@@ -14,6 +15,7 @@ const router = Router();
 
 router.get('/',       getStudents);          
 router.post('/',      createStudent);         
+router.get('/notifications', getMyAssignmentNotifications);
 router.get('/:id',    getStudentById);        
 router.patch('/:id',  updateStudent);        
 router.delete('/:id', requireAdmin, deleteStudent);         

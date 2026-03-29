@@ -11,7 +11,7 @@ import api from '../api/axios';
 // Route: /admin/students (admin only)
 export default function AdminStudents() {
   const [students, setStudents] = useState([]);
-  const [faculty,  setFaculty]  = useState([]);
+  const [assignableFaculty, setAssignableFaculty] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form,     setForm]     = useState({
@@ -24,10 +24,12 @@ export default function AdminStudents() {
   function loadData() {
     Promise.all([
       api.get('/students'),
-      api.get('/faculty'),
-    ]).then(([sRes, fRes]) => {
+      api.get('/admin/availability'),
+    ]).then(([sRes, availabilityRes]) => {
       setStudents(sRes.data);
-      setFaculty(fRes.data);
+      setAssignableFaculty(
+        availabilityRes.data.filter(f => f.status === 'available')
+      );
     }).finally(() => setLoading(false));
   }
 
@@ -91,8 +93,8 @@ export default function AdminStudents() {
             </select>
             <select className="admin-students-input" style={styles.input} required
               value={form.facultyId} onChange={e => update('facultyId', e.target.value)}>
-              <option value="">Assign to Faculty</option>
-              {faculty.map(f => <option key={f.id} value={f.id}>{f.name} ({f.dept})</option>)}
+              <option value="">Assign to Available Faculty</option>
+              {assignableFaculty.map(f => <option key={f.id} value={f.id}>{f.name} ({f.dept})</option>)}
             </select>
             <input className="admin-students-input" style={styles.input} placeholder="Dept (e.g. CSE)" required
               value={form.dept} onChange={e => update('dept', e.target.value)} />

@@ -1,4 +1,6 @@
 import prisma from '../lib/prisma.js';
+import { getFacultyStatusById } from '../services/facultyAvailability.service.js';
+import { pushAssignmentNotification } from '../lib/assignmentNotifications.js';
 
 export async function getFacultyAvailability(req, res, next) {
   try {
@@ -53,7 +55,7 @@ export async function reassignStudent(req, res, next) {
 
     const existingStudent = await prisma.student.findUnique({
       where: { id: studentId },
-      select: { id: true, facultyId: true },
+      select: { id: true, facultyId: true, name: true },
     });
 
     if (!existingStudent) {
@@ -70,10 +72,25 @@ export async function reassignStudent(req, res, next) {
       return res.status(404).json({ error: 'Target faculty not found' });
     }
 
+    const targetFacultyStatus = await getFacultyStatusById(newFacultyId);
+    if (targetFacultyStatus !== 'available') {
+      return res.status(400).json({
+        error: `Target faculty is currently ${targetFacultyStatus}. Only available faculty can be assigned.`,
+      });
+    }
+
     const student = await prisma.student.update({
       where: { id: studentId },
       data:  { facultyId: newFacultyId },
       include: { faculty: { select: { name: true } } },
+    });
+
+    pushAssignmentNotification({
+      facultyId: newFacultyId,
+      studentId: student.id,
+      studentName: student.name || existingStudent.name,
+      type: 'REASSIGNED',
+      assignedBy: req.user?.id,
     });
 
     res.json(student);

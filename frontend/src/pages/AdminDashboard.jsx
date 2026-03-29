@@ -67,12 +67,10 @@ export default function AdminDashboard() {
   });
 
   const selectedStudent = students.find(s => s.id === assignForm.studentId) || null;
-  const sortedFaculty = [...availability].sort((a, b) => {
-    const weight = { available: 0, busy: 1, not_available: 2 };
-    const byStatus = (weight[a.status] ?? 9) - (weight[b.status] ?? 9);
-    if (byStatus !== 0) return byStatus;
+  const sortedAvailableFaculty = [...available].sort((a, b) => {
     return a.name.localeCompare(b.name);
   });
+  const assignableFaculty = sortedAvailableFaculty.filter(f => f.id !== selectedStudent?.facultyId);
 
   function pickFirstAvailableFaculty() {
     const quickPick = available.find(f => f.id !== selectedStudent?.facultyId);
@@ -198,16 +196,15 @@ export default function AdminDashboard() {
               value={assignForm.newFacultyId}
               onChange={e => setAssignForm(p => ({ ...p, newFacultyId: e.target.value }))}
               required
-              disabled={!assignForm.studentId}
+              disabled={!assignForm.studentId || assignableFaculty.length === 0}
             >
-              <option value="">Select New Faculty</option>
-              {sortedFaculty.map(f => (
+              <option value="">Select Available Faculty</option>
+              {assignableFaculty.map(f => (
                 <option
                   key={f.id}
                   value={f.id}
-                  disabled={f.id === selectedStudent?.facultyId}
                 >
-                  {f.name} - {f.dept} [{f.status.replace('_', ' ')}]
+                  {f.name} - {f.dept}
                 </option>
               ))}
             </select>
@@ -216,7 +213,7 @@ export default function AdminDashboard() {
               type="button"
               onClick={pickFirstAvailableFaculty}
               style={styles.quickPickBtn}
-              disabled={!assignForm.studentId || available.length === 0}
+              disabled={!assignForm.studentId || assignableFaculty.length === 0}
             >
               Pick First Available
             </button>

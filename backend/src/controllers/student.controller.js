@@ -1,4 +1,9 @@
 import prisma from '../lib/prisma.js';
+import { getFacultyStatusById } from '../services/facultyAvailability.service.js';
+import {
+  consumeAssignmentNotifications,
+  pushAssignmentNotification,
+} from '../lib/assignmentNotifications.js';
 
 export async function getStudents(req, res, next) {
   try {
@@ -38,6 +43,15 @@ export async function createStudent(req, res, next) {
       return res.status(404).json({ error: `Faculty with id "${facultyId}" not found` });
     }
 
+    if (req.user.role === 'admin') {
+      const targetFacultyStatus = await getFacultyStatusById(facultyId);
+      if (targetFacultyStatus !== 'available') {
+        return res.status(400).json({
+          error: `Target faculty is currently ${targetFacultyStatus}. Only available faculty can be assigned.`,
+        });
+      }
+    }
+
     const student = await prisma.student.create({
       data: {
         name,
@@ -51,7 +65,30 @@ export async function createStudent(req, res, next) {
       },
     });
 
+    if (req.user.role === 'admin') {
+      pushAssignmentNotification({
+        facultyId,
+        studentId: student.id,
+        studentName: student.name,
+        type: 'ASSIGNED',
+        assignedBy: req.user?.id,
+      });
+    }
+
     res.status(201).json(student);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getMyAssignmentNotifications(req, res, next) {
+  try {
+    if (req.user.role !== 'faculty') {
+      return res.status(403).json({ error: 'Faculty access required' });
+    }
+
+    const notifications = consumeAssignmentNotifications(req.user.id);
+    res.json({ notifications });
   } catch (err) {
     next(err);
   }
