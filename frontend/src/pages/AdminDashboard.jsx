@@ -16,6 +16,9 @@ export default function AdminDashboard() {
   const { availability, loading }  = useAvailability(5000);
   const [stats,    setStats]       = useState(null);
   const [students, setStudents]    = useState([]);
+  const [deletedRecords, setDeletedRecords] = useState({ deletedStudents: [], deletedFaculty: [] });
+  const [restoreMsg, setRestoreMsg] = useState(null);
+  const [restoringKey, setRestoringKey] = useState('');
   const [studentQuery, setStudentQuery] = useState('');
   const [assigning, setAssigning]  = useState(false);
   const [assignForm, setAssignForm] = useState({ studentId: '', newFacultyId: '' });
@@ -25,14 +28,24 @@ export default function AdminDashboard() {
     Promise.all([
       api.get('/admin/stats'),
       api.get('/students'),
-    ]).then(([statsRes, studentsRes]) => {
+      api.get('/admin/deleted'),
+    ]).then(([statsRes, studentsRes, deletedRes]) => {
       setStats(statsRes.data);
       setStudents(studentsRes.data);
+      setDeletedRecords(deletedRes.data);
     });
   }, []);
 
   function loadStudents() {
     api.get('/students').then(({ data }) => setStudents(data));
+  }
+
+  function loadDeletedRecords() {
+    api.get('/admin/deleted').then(({ data }) => setDeletedRecords(data));
+  }
+
+  function loadStats() {
+    api.get('/admin/stats').then(({ data }) => setStats(data));
   }
 
   async function handleAssign(e) {
@@ -45,10 +58,37 @@ export default function AdminDashboard() {
       setAssignForm({ studentId: '', newFacultyId: '' });
       setStudentQuery('');
       loadStudents();
+      loadStats();
     } catch (err) {
       setAssignMsg({ type: 'err', text: err.response?.data?.error || 'Assignment failed' });
     } finally {
       setAssigning(false);
+    }
+  }
+
+  async function handleRestore(type, record) {
+    setRestoreMsg(null);
+    const key = `${type}:${record.id}`;
+    setRestoringKey(key);
+
+    try {
+      const endpoint = type === 'student'
+        ? `/admin/deleted/students/${record.id}/restore`
+        : `/admin/deleted/faculty/${record.id}/restore`;
+
+      await api.patch(endpoint);
+      setRestoreMsg({
+        type: 'ok',
+        text: `${type === 'student' ? 'Student' : 'Faculty'} "${record.name}" restored successfully.`,
+      });
+
+      loadDeletedRecords();
+      loadStudents();
+      loadStats();
+    } catch (err) {
+      setRestoreMsg({ type: 'err', text: err.response?.data?.error || 'Restore failed' });
+    } finally {
+      setRestoringKey('');
     }
   }
 
@@ -160,6 +200,83 @@ export default function AdminDashboard() {
               })}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* ── Restore Deleted Records ── */}
+      <section className="admin-dashboard-section" style={styles.section}>
+        <h2 style={styles.sectionTitle}>
+          Restore Deleted Records
+          <span style={styles.badge}>
+            {deletedRecords.deletedStudents.length} students | {deletedRecords.deletedFaculty.length} faculty
+          </span>
+        </h2>
+
+        {restoreMsg && (
+          <p style={{ color: restoreMsg.type === 'ok' ? 'green' : 'red', marginBottom: '0.75rem' }}>
+            {restoreMsg.text}
+          </p>
+        )}
+
+        <div style={styles.restoreGrid}>
+          <div style={styles.restoreCard}>
+            <h3 style={styles.restoreHeading}>Deleted Students</h3>
+            {deletedRecords.deletedStudents.length === 0 && (
+              <p style={styles.muted}>No deleted students.</p>
+            )}
+
+            {deletedRecords.deletedStudents.map(student => {
+              const facultyDeleted = Boolean(student.faculty?.deletedAt);
+              const isRestoring = restoringKey === `student:${student.id}`;
+
+              return (
+                <div key={student.id} style={styles.restoreRow}>
+                  <div>
+                    <strong>{student.name}</strong>
+                    <p style={styles.restoreMeta}>Dept: {student.dept}</p>
+                    <p style={styles.restoreMeta}>Faculty: {student.faculty?.name || 'Unknown'}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRestore('student', student)}
+                    style={styles.restoreBtn}
+                    disabled={facultyDeleted || isRestoring}
+                    title={facultyDeleted ? 'Restore faculty first' : 'Restore student'}
+                  >
+                    {isRestoring ? 'Restoring...' : 'Restore'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={styles.restoreCard}>
+            <h3 style={styles.restoreHeading}>Deleted Faculty</h3>
+            {deletedRecords.deletedFaculty.length === 0 && (
+              <p style={styles.muted}>No deleted faculty.</p>
+            )}
+
+            {deletedRecords.deletedFaculty.map(faculty => {
+              const isRestoring = restoringKey === `faculty:${faculty.id}`;
+              return (
+                <div key={faculty.id} style={styles.restoreRow}>
+                  <div>
+                    <strong>{faculty.name}</strong>
+                    <p style={styles.restoreMeta}>{faculty.email}</p>
+                    <p style={styles.restoreMeta}>Dept: {faculty.dept}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRestore('faculty', faculty)}
+                    style={styles.restoreBtn}
+                    disabled={isRestoring}
+                  >
+                    {isRestoring ? 'Restoring...' : 'Restore'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -275,6 +392,12 @@ const styles = {
   assignActionRow: { display: 'flex', gap: '0.75rem', width: '100%', flexWrap: 'wrap' },
   quickPickBtn: { background: '#edf2f7', color: '#1a1a2e', border: '1px solid #cbd5e0', padding: '0.6rem 0.9rem', borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap' },
   submitBtn:    { background: '#1a1a2e', color: '#fff', border: 'none', padding: '0.6rem 1.25rem', borderRadius: 6, cursor: 'pointer', fontFamily: 'sans-serif', fontWeight: 600 },
+  restoreGrid:  { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.9rem' },
+  restoreCard:  { border: '1px solid #ececec', borderRadius: 10, padding: '0.85rem' },
+  restoreHeading: { margin: '0 0 0.75rem', fontSize: '1rem', color: '#1a1a2e' },
+  restoreRow:   { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', borderTop: '1px solid #f3f3f3', padding: '0.6rem 0' },
+  restoreMeta:  { margin: '2px 0', fontSize: '0.8rem', color: '#6b7280' },
+  restoreBtn:   { background: '#e8f5e9', color: '#1b5e20', border: '1px solid #b7dfb9', borderRadius: 6, padding: '0.4rem 0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' },
   navLinks:     { display: 'flex', gap: '1rem', marginTop: '0.5rem' },
   navLink:      { color: '#1a1a2e', fontWeight: 600, textDecoration: 'none', fontSize: '0.95rem' },
 };

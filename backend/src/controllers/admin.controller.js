@@ -1,21 +1,28 @@
 import prisma from '../lib/prisma.js';
-import { getFacultyStatusById } from '../services/facultyAvailability.service.js';
+import {
+  getFacultyStatusById,
+  resolveFacultyStatus,
+} from '../services/facultyAvailability.service.js';
 import { pushAssignmentNotification } from '../lib/assignmentNotifications.js';
 
 export async function getFacultyAvailability(req, res, next) {
   try {
     const faculty = await prisma.faculty.findMany({
+      where: { deletedAt: null },
       include: {
         attendances: {
           orderBy: { checkinTime: 'desc' },
           take: 1,
           select: { checkinTime: true, checkoutTime: true },
         },
+        students: {
+          where: { deletedAt: null },
+          select: { id: true },
+        },
         sessions: {
           where:  { endTime: null },
           select: { id: true, startTime: true },
         },
-        _count: { select: { students: true } },
       },
       orderBy: { name: 'asc' },
     });
@@ -23,16 +30,14 @@ export async function getFacultyAvailability(req, res, next) {
     const availability = faculty.map(f => {
       const isCheckedIn = f.attendances.length > 0 && !f.attendances[0].checkoutTime;
       const hasActiveSession = f.sessions.length > 0;
-      const status = hasActiveSession
-        ? 'busy'
-        : (isCheckedIn ? 'available' : 'not_available');
+      const status = resolveFacultyStatus({ isCheckedIn, hasActiveSession });
 
       return {
         id:              f.id,
         name:            f.name,
         email:           f.email,
         dept:            f.dept,
-        studentCount:    f._count.students,
+        studentCount:    f.students.length,
         status,
         activeSessionId: f.sessions[0]?.id ?? null,
         sessionStartAt:  f.sessions[0]?.startTime ?? null,
@@ -53,8 +58,8 @@ export async function reassignStudent(req, res, next) {
       return res.status(400).json({ error: 'studentId and newFacultyId are required' });
     }
 
-    const existingStudent = await prisma.student.findUnique({
-      where: { id: studentId },
+    const existingStudent = await prisma.student.findFirst({
+      where: { id: studentId, deletedAt: null },
       select: { id: true, facultyId: true, name: true },
     });
 
@@ -67,7 +72,7 @@ export async function reassignStudent(req, res, next) {
     }
 
     // Confirming whether the new faculty exists before assigning
-    const faculty = await prisma.faculty.findUnique({ where: { id: newFacultyId } });
+    const faculty = await prisma.faculty.findFirst({ where: { id: newFacultyId, deletedAt: null } });
     if (!faculty) {
       return res.status(404).json({ error: 'Target faculty not found' });
     }
@@ -104,10 +109,10 @@ export async function reassignStudent(req, res, next) {
 export async function getStats(req, res, next) {
   try {
     const [totalFaculty, totalStudents, totalSessions, activeSessions] = await Promise.all([
-      prisma.faculty.count(),
-      prisma.student.count(),
-      prisma.session.count(),
-      prisma.session.count({ where: { endTime: null } }),
+      prisma.faculty.count({ where: { deletedAt: null } }),
+      prisma.student.count({ where: { deletedAt: null } }),
+      prisma.session.count({ where: { faculty: { deletedAt: null } } }),
+      prisma.session.count({ where: { endTime: null, faculty: { deletedAt: null } } }),
     ]);
 
     res.json({
@@ -116,6 +121,98 @@ export async function getStats(req, res, next) {
       totalSessions,
       activeSessions,
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getDeletedRecords(req, res, next) {
+  try {
+    const [deletedStudents, deletedFaculty] = await Promise.all([
+      prisma.student.findMany({
+        where: { deletedAt: { not: null } },
+        select: {
+          id: true,
+          name: true,
+          dept: true,
+          deletedAt: true,
+          facultyId: true,
+          faculty: {
+            select: { id: true, name: true, deletedAt: true },
+          },
+        },
+        orderBy: { deletedAt: 'desc' },
+      }),
+      prisma.faculty.findMany({
+        where: { deletedAt: { not: null } },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          dept: true,
+          deletedAt: true,
+        },
+        orderBy: { deletedAt: 'desc' },
+      }),
+    ]);
+
+    res.json({ deletedStudents, deletedFaculty });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function restoreDeletedStudent(req, res, next) {
+  try {
+    const student = await prisma.student.findFirst({
+      where: { id: req.params.id, deletedAt: { not: null } },
+      select: { id: true, facultyId: true, name: true },
+    });
+
+    if (!student) {
+      return res.status(404).json({ error: 'Deleted student not found' });
+    }
+
+    const faculty = await prisma.faculty.findFirst({
+      where: { id: student.facultyId, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (!faculty) {
+      return res.status(400).json({
+        error: 'Cannot restore student because the assigned faculty is deleted. Restore faculty first.',
+      });
+    }
+
+    const restored = await prisma.student.update({
+      where: { id: req.params.id },
+      data: { deletedAt: null },
+      include: { faculty: { select: { id: true, name: true } } },
+    });
+
+    res.json(restored);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function restoreDeletedFaculty(req, res, next) {
+  try {
+    const faculty = await prisma.faculty.findFirst({
+      where: { id: req.params.id, deletedAt: { not: null } },
+      select: { id: true },
+    });
+
+    if (!faculty) {
+      return res.status(404).json({ error: 'Deleted faculty not found' });
+    }
+
+    const restored = await prisma.faculty.update({
+      where: { id: req.params.id },
+      data: { deletedAt: null },
+    });
+
+    res.json(restored);
   } catch (err) {
     next(err);
   }

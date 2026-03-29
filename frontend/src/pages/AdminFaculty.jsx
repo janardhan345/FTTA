@@ -7,7 +7,7 @@ import api from '../api/axios';
 //   - List all faculty with their student/session counts and in-session status
 //   - Add a new faculty (pre-registration before they log in)
 //   - Update dept for a faculty
-//   - Delete a faculty (cascades to their students + sessions)
+//   - Soft-delete a faculty (recoverable from Admin Dashboard)
 //
 // Route: /admin/faculty (admin only)
 export default function AdminFaculty() {
@@ -39,7 +39,7 @@ export default function AdminFaculty() {
   }
 
   async function handleDelete(id, name) {
-    if (!confirm(`Delete faculty "${name}"? This will also delete all their students and sessions.`)) return;
+    if (!confirm(`Delete faculty "${name}"? You can restore it from Admin Dashboard.`)) return;
     try {
       await api.delete(`/faculty/${id}`);
       loadFaculty();

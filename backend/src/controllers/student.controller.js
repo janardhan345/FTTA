@@ -8,8 +8,8 @@ import {
 export async function getStudents(req, res, next) {
   try {
     const where = req.user.role === 'admin'
-      ? {}                                  
-      : { facultyId: req.user.id };         
+      ? { deletedAt: null }
+      : { facultyId: req.user.id, deletedAt: null };
 
     const students = await prisma.student.findMany({
       where,
@@ -38,7 +38,7 @@ export async function createStudent(req, res, next) {
     }
 
     // Make sure the target faculty actually exists before creating the student
-    const faculty = await prisma.faculty.findUnique({ where: { id: facultyId } });
+    const faculty = await prisma.faculty.findFirst({ where: { id: facultyId, deletedAt: null } });
     if (!faculty) {
       return res.status(404).json({ error: `Faculty with id "${facultyId}" not found` });
     }
@@ -96,8 +96,8 @@ export async function getMyAssignmentNotifications(req, res, next) {
 
 export async function getStudentById(req, res, next) {
   try {
-    const student = await prisma.student.findUnique({
-      where:   { id: req.params.id },
+    const student = await prisma.student.findFirst({
+      where:   { id: req.params.id, deletedAt: null },
       include: { faculty: { select: { name: true, email: true } } },
     });
 
@@ -117,7 +117,7 @@ export async function getStudentById(req, res, next) {
 
 export async function updateStudent(req, res, next) {
   try {
-    const student = await prisma.student.findUnique({ where: { id: req.params.id } });
+    const student = await prisma.student.findFirst({ where: { id: req.params.id, deletedAt: null } });
 
     if (!student) {
       return res.status(404).json({ error: 'Student not found' });
@@ -132,6 +132,25 @@ export async function updateStudent(req, res, next) {
       // Admin can update everything
       const { name, gender, dept, cutOff, community, quota, status, facultyId } = req.body;
       data = { name, gender, dept, community, quota, status, facultyId };
+
+      if (facultyId !== undefined && facultyId !== student.facultyId) {
+        const targetFaculty = await prisma.faculty.findFirst({
+          where: { id: facultyId, deletedAt: null },
+          select: { id: true },
+        });
+
+        if (!targetFaculty) {
+          return res.status(404).json({ error: `Faculty with id "${facultyId}" not found` });
+        }
+
+        const targetFacultyStatus = await getFacultyStatusById(facultyId);
+        if (targetFacultyStatus !== 'available') {
+          return res.status(400).json({
+            error: `Target faculty is currently ${targetFacultyStatus}. Only available faculty can be assigned.`,
+          });
+        }
+      }
+
       if (cutOff !== undefined) {
         const parsedCutOff = parseFloat(cutOff);
         if (Number.isNaN(parsedCutOff)) {
@@ -165,6 +184,20 @@ export async function updateStudent(req, res, next) {
       data:  cleanData,
     });
 
+    if (
+      req.user.role === 'admin' &&
+      cleanData.facultyId &&
+      cleanData.facultyId !== student.facultyId
+    ) {
+      pushAssignmentNotification({
+        facultyId: cleanData.facultyId,
+        studentId: updated.id,
+        studentName: updated.name,
+        type: 'REASSIGNED',
+        assignedBy: req.user?.id,
+      });
+    }
+
     res.json(updated);
   } catch (err) {
     if (err.code === 'P2025') {
@@ -176,7 +209,7 @@ export async function updateStudent(req, res, next) {
 
 export async function deleteStudent(req, res, next) {
   try {
-    const student = await prisma.student.findUnique({ where: { id: req.params.id } });
+    const student = await prisma.student.findFirst({ where: { id: req.params.id, deletedAt: null } });
 
     if (!student) {
       return res.status(404).json({ error: 'Student not found' });
@@ -187,7 +220,10 @@ export async function deleteStudent(req, res, next) {
       return res.status(403).json({ error: 'You can only delete your own students' });
     }
 
-    await prisma.student.delete({ where: { id: req.params.id } });
+    await prisma.student.update({
+      where: { id: req.params.id },
+      data: { deletedAt: new Date() },
+    });
     res.status(204).send();
   } catch (err) {
     if (err.code === 'P2025') {

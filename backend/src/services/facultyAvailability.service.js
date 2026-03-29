@@ -6,8 +6,11 @@ export function resolveFacultyStatus({ isCheckedIn, hasActiveSession }) {
 }
 
 export async function getFacultyStatusById(facultyId) {
-  const faculty = await prisma.faculty.findUnique({
-    where: { id: facultyId },
+  const faculty = await prisma.faculty.findFirst({
+    where: {
+      id: facultyId,
+      deletedAt: null,
+    },
     include: {
       attendances: {
         orderBy: { checkinTime: 'desc' },

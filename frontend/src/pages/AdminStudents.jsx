@@ -6,7 +6,7 @@ import api from '../api/axios';
 // Admin can:
 //   - View all students with their assigned faculty
 //   - Add a student and assign to a faculty
-//   - Delete a student
+//   - Soft-delete a student (recoverable from Admin Dashboard)
 //
 // Route: /admin/students (admin only)
 export default function AdminStudents() {
@@ -50,7 +50,7 @@ export default function AdminStudents() {
   }
 
   async function handleDelete(id, name) {
-    if (!confirm(`Delete student "${name}"?`)) return;
+    if (!confirm(`Delete student "${name}"? You can restore from Admin Dashboard.`)) return;
     try {
       await api.delete(`/students/${id}`);
       loadData();

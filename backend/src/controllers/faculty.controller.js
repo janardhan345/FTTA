@@ -3,9 +3,13 @@ import prisma from '../lib/prisma.js';
 export async function getAllFaculty(req, res, next) {
   try {
     const faculty = await prisma.faculty.findMany({
+      where: { deletedAt: null },
       include: {
-        // _count gives us aggregate counts without fetching all rows
-        _count: { select: { students: true, sessions: true } },
+        students: {
+          where: { deletedAt: null },
+          select: { id: true },
+        },
+        _count: { select: { sessions: true } },
         // Fetch only active sessions (endTime = null) — just the id field
         sessions: {
           where:  { endTime: null },
@@ -20,7 +24,7 @@ export async function getAllFaculty(req, res, next) {
       name:          f.name,
       email:         f.email,
       dept:          f.dept,
-      studentCount:  f._count.students,
+      studentCount:  f.students.length,
       sessionCount:  f._count.sessions,
       isInSession:   f.sessions.length > 0,   // true if there's an active session
       createdAt:     f.createdAt,
@@ -60,10 +64,10 @@ export async function createFaculty(req, res, next) {
 
 export async function getFacultyById(req, res, next) {
   try {
-    const faculty = await prisma.faculty.findUnique({
-      where:   { id: req.params.id },
+    const faculty = await prisma.faculty.findFirst({
+      where:   { id: req.params.id, deletedAt: null },
       include: {
-        students: { orderBy: { name: 'asc' } },
+        students: { where: { deletedAt: null }, orderBy: { name: 'asc' } },
         _count:   { select: { sessions: true } },
       },
     });
@@ -80,6 +84,15 @@ export async function getFacultyById(req, res, next) {
 
 export async function updateFaculty(req, res, next) {
   try {
+    const existing = await prisma.faculty.findFirst({
+      where: { id: req.params.id, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Faculty not found' });
+    }
+
     const { name, dept } = req.body;
 
     const data = {};
@@ -106,12 +119,38 @@ export async function updateFaculty(req, res, next) {
 
 export async function deleteFaculty(req, res, next) {
   try {
-    await prisma.faculty.delete({ where: { id: req.params.id } });
-    res.status(204).send();
-  } catch (err) {
-    if (err.code === 'P2025') {
+    const faculty = await prisma.faculty.findFirst({
+      where: { id: req.params.id, deletedAt: null },
+      select: { id: true },
+    });
+
+    if (!faculty) {
       return res.status(404).json({ error: 'Faculty not found' });
     }
+
+    const deletedAt = new Date();
+
+    await prisma.$transaction([
+      prisma.faculty.update({
+        where: { id: req.params.id },
+        data: { deletedAt },
+      }),
+      prisma.session.updateMany({
+        where: { facultyId: req.params.id, endTime: null },
+        data: { endTime: deletedAt },
+      }),
+      prisma.attendance.updateMany({
+        where: { facultyId: req.params.id, checkoutTime: null },
+        data: { checkoutTime: deletedAt },
+      }),
+      prisma.student.updateMany({
+        where: { facultyId: req.params.id, deletedAt: null },
+        data: { deletedAt },
+      }),
+    ]);
+
+    res.status(204).send();
+  } catch (err) {
     next(err);
   }
 }

@@ -22,6 +22,7 @@ model Faculty {
   name      String
   dept      String
   createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
 
   students    Student[]
   sessions    Session[]
@@ -40,6 +41,7 @@ model Student {
   quota     String
   status    String   // ex: active, counselled, pending
   createdAt DateTime @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
 
 
 facultyId String   @map("faculty_id")
