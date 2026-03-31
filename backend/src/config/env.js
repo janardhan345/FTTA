@@ -6,8 +6,8 @@ const required = [
   'GOOGLE_CLIENT_SECRET',
   'GOOGLE_CALLBACK_URL',
   'JWT_SECRET',
-  'FACULTY_DOMAIN',
-  'ADMIN_EMAIL',
+  'FACULTY_DOMAINS',
+  'ADMIN_EMAILS',
   'FRONTEND_URL',
 ];
 
@@ -24,8 +24,8 @@ export const env = {
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
   JWT_SECRET:          process.env.JWT_SECRET,
   JWT_EXPIRES_IN:      process.env.JWT_EXPIRES_IN || '7d',
-  FACULTY_DOMAIN:      process.env.FACULTY_DOMAIN,
-  ADMIN_EMAIL:         process.env.ADMIN_EMAIL,
+  FACULTY_DOMAINS:     process.env.FACULTY_DOMAINS.split(',').map(d => d.trim()),
+  ADMIN_EMAILS:        process.env.ADMIN_EMAILS.split(',').map(e => e.trim()),
   FRONTEND_URL:        process.env.FRONTEND_URL,
   PORT:                parseInt(process.env.PORT || '3000', 10),
   QR_EXPIRY_MINUTES:   parseInt(process.env.QR_EXPIRY_MINUTES || '5', 10),

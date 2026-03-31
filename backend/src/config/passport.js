@@ -18,7 +18,7 @@ passport.use(
         const emailLocal = email.split('@')[0];
         const [nameFromEmail, deptCode] = emailLocal.split('.');
 
-        if (email === env.ADMIN_EMAIL) {
+        if (env.ADMIN_EMAILS.includes(email)) {
           const admin = await prisma.admin.upsert({
             where:  { email },
             update: { id: googleId, name: nameFromEmail },
@@ -35,7 +35,7 @@ passport.use(
 
         const emailDomain = email.split('@')[1];
 
-        if (emailDomain !== env.FACULTY_DOMAIN) {
+        if (!env.FACULTY_DOMAINS.includes(emailDomain)) {
           return done(null, false, {
             message: `Email domain "${emailDomain}" is not authorized`,
           });
