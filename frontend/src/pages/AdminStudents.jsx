@@ -102,8 +102,12 @@ export default function AdminStudents() {
               value={form.cutOff} onChange={e => update('cutOff', e.target.value)} />
             <input className="admin-students-input" style={styles.input} placeholder="Community (e.g. OC, BC)" required
               value={form.community} onChange={e => update('community', e.target.value)} />
-            <input className="admin-students-input" style={styles.input} placeholder="Quota (e.g. Government, Management)" required
-              value={form.quota} onChange={e => update('quota', e.target.value)} />
+            <select className="admin-students-input" style={styles.input} required
+              value={form.quota} onChange={e => update('quota', e.target.value)}>
+              <option value="">Select Quota Type</option>
+              <option value="Government">Government</option>
+              <option value="Management">Management</option>
+            </select>
             <select className="admin-students-input" style={styles.input} value={form.status} onChange={e => update('status', e.target.value)}>
               <option value="pending">Pending</option>
               <option value="admitted">Admitted</option>
