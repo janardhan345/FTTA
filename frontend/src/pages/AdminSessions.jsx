@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
 import api from '../api/axios';
 
 // AdminSessions: view all sessions across all faculty
@@ -78,9 +79,12 @@ export default function AdminSessions() {
         {/* Header */}
         <div style={styles.header}>
           <h1 style={styles.title}>All Sessions</h1>
-          <button onClick={() => navigate('/admin')} style={styles.backBtn}>
-            ← Back to Dashboard
-          </button>
+          <div style={styles.headerActions}>
+            <ThemeToggle />
+            <button onClick={() => navigate('/admin')} style={styles.backBtn}>
+              ← Back to Dashboard
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -246,6 +250,7 @@ const styles = {
     alignItems: 'center',
     marginBottom: '2rem',
   },
+  headerActions:{ display: 'flex', gap: '0.5rem', alignItems: 'center' },
   title: {
     margin: 0,
     fontSize: '1.8rem',

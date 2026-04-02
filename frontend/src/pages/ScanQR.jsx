@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
 import QRScanner from '../components/QRScanner';
 import api from '../api/axios';
 
@@ -113,9 +114,12 @@ export default function ScanQR() {
   return (
     <div className="scan-page" style={styles.page}>
       <div className="scan-card" style={styles.card}>
-        <button onClick={() => navigate('/dashboard')} style={styles.backLink}>
-          ← Back
-        </button>
+        <div style={styles.cardHeader}>
+          <button onClick={() => navigate('/dashboard')} style={styles.backLink}>
+            ← Back
+          </button>
+          <ThemeToggle />
+        </div>
         <h2 style={styles.title}>What are you doing?</h2>
         <p style={styles.hint}>Select an option to begin scanning</p>
 
@@ -152,6 +156,7 @@ export default function ScanQR() {
 const styles = {
   page: { display: 'flex', justifyContent: 'center', padding: '1rem', fontFamily: 'sans-serif', minHeight: '100vh', background: '#f0f2f5' },
   card: { background: '#fff', borderRadius: 12, padding: '1.5rem', maxWidth: 440, width: '100%', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' },
+  cardHeader:{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' },
   title: { margin: '0.5rem 0', fontSize: '1.4rem', color: '#1a1a2e' },
   hint: { color: '#666', fontSize: '0.9rem', marginBottom: '1.5rem' },
   backLink: { background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: '0.9rem', padding: 0, marginBottom: '1rem' },

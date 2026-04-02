@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import { useAvailability } from '../hooks/useAvailability';
 import api from '../api/axios';
 
@@ -128,6 +129,7 @@ export default function AdminDashboard() {
         <h1 style={styles.heading}>Admin Dashboard</h1>
         <div className="admin-dashboard-header-actions" style={styles.headerActions}>
           <Link to="/kiosk" target="_blank" style={styles.kioskLink}>Open Kiosk QR ↗</Link>
+          <ThemeToggle />
           <button onClick={logout} style={styles.logoutBtn}>Logout</button>
         </div>
       </header>

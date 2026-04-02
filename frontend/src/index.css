@@ -1,3 +1,25 @@
+/* CSS Variables for theme support */
+:root[data-theme="light"],
+:root {
+  --bg-primary: #f0f2f5;
+  --text-primary: #333;
+  --text-secondary: #666;
+  --text-tertiary: #999;
+  --accent-blue: #4285f4;
+  --accent-green: #155724;
+  --accent-red: #e55;
+}
+
+:root[data-theme="dark"] {
+  --bg-primary: #1a1a2e;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #a0a0a0;
+  --accent-blue: #4285f4;
+  --accent-green: #155724;
+  --accent-red: #e55;
+}
+
 /* Minimal global reset — all page-specific styles are defined inline in each component */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -6,8 +28,10 @@
 body {
   margin: 0;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  background: #f0f2f5;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 #root {

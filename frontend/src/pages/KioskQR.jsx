@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import ThemeToggle from '../components/ThemeToggle';
 import { useQR } from '../hooks/useQR';
 
 // KioskQR: full-screen QR display for the admin's dedicated kiosk device.
@@ -41,6 +42,9 @@ export default function KioskQR() {
 
   return (
     <div className="kiosk-page" style={styles.page}>
+      <div style={styles.themeToggleContainer}>
+        <ThemeToggle />
+      </div>
       <h1 style={styles.title}>Counselling Session Check-In</h1>
       <p style={styles.subtitle}>Faculty: scan the appropriate QR with the FTTA app on your phone</p>
 
@@ -93,8 +97,9 @@ const styles = {
     display: 'flex', flexDirection: 'column', alignItems: 'center',
     justifyContent: 'center', minHeight: '100vh',
     background: '#1a1a2e', color: '#fff', fontFamily: 'sans-serif',
-    padding: '2rem', boxSizing: 'border-box',
+    padding: '2rem', boxSizing: 'border-box', position: 'relative',
   },
+  themeToggleContainer:{ position: 'absolute', top: '1rem', right: '1rem' },
   title: {
     fontSize: '2.5rem', fontWeight: 700, margin: '0 0 0.5rem', textAlign: 'center',
   },

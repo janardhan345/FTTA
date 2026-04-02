@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 
 import Login            from './pages/Login';
@@ -19,9 +20,10 @@ import KioskQR          from './pages/KioskQR';
 // ProtectedRoute wraps each private page to enforce login + role checks.
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
           {/* ── Public ─────────────────────────────────────────── */}
           <Route path="/login"         element={<Login />} />
           {/* OAuth callback: backend redirects here with ?token= */}
@@ -76,7 +78,8 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
 import api from '../api/axios';
 
 // FacultyDashboard: the main page for faculty members.
@@ -146,7 +147,10 @@ export default function FacultyDashboard() {
           <h1 style={styles.heading}>Welcome, {user?.name?.split(' ')[0]}</h1>
           <p style={styles.subheading}>{user?.dept} Department</p>
         </div>
-        <button className="faculty-dashboard-logout" onClick={logout} style={styles.logoutBtn}>Logout</button>
+        <div style={styles.headerActions}>
+          <ThemeToggle />
+          <button className="faculty-dashboard-logout" onClick={logout} style={styles.logoutBtn}>Logout</button>
+        </div>
       </header>
 
       {error   && <div style={styles.error}>{error}</div>}
@@ -306,6 +310,7 @@ export default function FacultyDashboard() {
 const styles = {
   page:         { maxWidth: 600, margin: '0 auto', padding: '1rem', fontFamily: 'sans-serif' },
   header:       { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
+  headerActions:{ display: 'flex', gap: '0.5rem', alignItems: 'center' },
   heading:      { margin: 0, fontSize: '1.5rem', color: '#1a1a2e' },
   subheading:   { margin: 0, color: '#666', fontSize: '0.9rem' },
   logoutBtn:    { background: '#eee', border: 'none', padding: '0.5rem 1rem', borderRadius: 6, cursor: 'pointer' },

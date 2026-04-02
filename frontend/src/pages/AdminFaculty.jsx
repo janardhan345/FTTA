@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import ThemeToggle from '../components/ThemeToggle';
 import api from '../api/axios';
 
 // AdminFaculty: manage all faculty members.
@@ -55,9 +56,12 @@ export default function AdminFaculty() {
           <Link to="/admin" style={styles.back}>← Admin Dashboard</Link>
           <h1 style={styles.heading}>Manage Faculty</h1>
         </div>
-        <button className="admin-faculty-add-btn" onClick={() => setShowForm(f => !f)} style={styles.addBtn}>
-          {showForm ? 'Cancel' : '+ Add Faculty'}
-        </button>
+        <div style={styles.headerActions}>
+          <ThemeToggle />
+          <button className="admin-faculty-add-btn" onClick={() => setShowForm(f => !f)} style={styles.addBtn}>
+            {showForm ? 'Cancel' : '+ Add Faculty'}
+          </button>
+        </div>
       </header>
 
       {error   && <div style={styles.error}>{error}</div>}
@@ -111,6 +115,7 @@ export default function AdminFaculty() {
 const styles = {
   page:       { maxWidth: 800, margin: '0 auto', padding: '1rem', fontFamily: 'sans-serif' },
   header:     { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' },
+  headerActions:{ display: 'flex', gap: '0.5rem', alignItems: 'center' },
   back:       { color: '#555', textDecoration: 'none', fontSize: '0.85rem' },
   heading:    { margin: '0.25rem 0 0', fontSize: '1.4rem', color: '#1a1a2e' },
   addBtn:     { background: '#1a1a2e', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: 8, cursor: 'pointer', fontFamily: 'sans-serif', whiteSpace: 'nowrap' },
