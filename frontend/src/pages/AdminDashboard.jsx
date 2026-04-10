@@ -302,7 +302,13 @@ export default function AdminDashboard() {
       <section className="admin-dashboard-section" style={styles.section}>
         <h2 style={styles.sectionTitle}>Reassign Student</h2>
         <form className="admin-dashboard-form" onSubmit={handleAssign} style={styles.form}>
-
+          <input
+            className="admin-dashboard-input"
+            style={styles.input}
+            placeholder="Search student by name, dept, or current faculty"
+            value={studentQuery}
+            onChange={e => setStudentQuery(e.target.value)}
+          />
           <select
             className="admin-dashboard-input"
             style={styles.input}
