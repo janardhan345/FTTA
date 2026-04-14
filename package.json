@@ -1,0 +1,11 @@
+{
+  "name": "ftta-root",
+  "private": true,
+  "scripts": {
+    "heroku-postbuild": "npm --prefix backend ci --omit=dev",
+    "start": "npm --prefix backend start"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
