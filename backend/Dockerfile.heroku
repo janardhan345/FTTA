@@ -1,0 +1,20 @@
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+# Prisma needs OpenSSL in the runtime image.
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+# Build from repo root context; copy backend app files explicitly.
+COPY backend/package*.json ./
+COPY backend/prisma ./prisma
+
+# Keep Prisma CLI available in production because migrations run at release phase.
+RUN npm ci --omit=dev
+
+COPY backend/src ./src
+COPY backend/server.js ./server.js
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]

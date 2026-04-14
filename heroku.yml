@@ -1,0 +1,10 @@
+build:
+  docker:
+    web: backend/Dockerfile.heroku
+
+release:
+  command:
+    - npx prisma migrate deploy
+
+run:
+  web: node server.js
